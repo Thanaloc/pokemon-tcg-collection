@@ -229,7 +229,7 @@ export default function PokemonTCGCollection() {
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500" size={22} />
             <input
               type="text"
-              placeholder="🔍 Rechercher un Pokémon par nom ou numéro..."
+              placeholder="Rechercher un Pokémon par nom ou numéro..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-12 pr-6 py-4 bg-white border-2 border-white/50 rounded-2xl focus:ring-4 focus:ring-red-300 focus:border-red-400 transition-all shadow-xl text-gray-800 placeholder-gray-500 text-lg"
