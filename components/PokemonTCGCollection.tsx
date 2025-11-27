@@ -176,7 +176,7 @@ export default function PokemonTCGCollection() {
         case 'set':
           return a.set.localeCompare(b.set);
         case 'rarity':
-          const rarityOrder = ['Commune', 'Peu Commune', 'Rare', 'Rare Holo', 'Holo Rare', 'Double rare', 'Ultra Rare', 'Holo Rare V', 'Holo Rare VMAX', 'Holo Rare VSTAR', 'Radieux Rare', 'Illustration rare', 'Shiny Rare', 'Rainbow Rare', 'Secrète', 'Hyper rare', 'Magnifique rare', 'Illustration spéciale rare', 'Shiny Rare VMAX', 'Chromatique ultra rare', 'Méga Hyper Rare', 'Rare Noir Blanc'];
+          const rarityOrder = ['Sans Rareté','Commune', 'Peu Commune', 'Rare', 'Rare Holo', 'Holo Rare', 'Double rare', 'Ultra Rare', 'Holo Rare V', 'Holo Rare VMAX', 'Holo Rare VSTAR', 'Radieux Rare', 'Illustration rare', 'Shiny Rare', 'Rainbow Rare', 'Secrète', 'Hyper rare', 'Magnifique rare', 'Illustration spéciale rare', 'Shiny Rare VMAX', 'Chromatique ultra rare', 'Méga Hyper Rare', 'Rare Noir Blanc'];
           return rarityOrder.reverse().indexOf(a.rarity) - rarityOrder.indexOf(b.rarity);
         case 'number':
           return parseInt(a.number) - parseInt(b.number);
