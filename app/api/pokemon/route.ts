@@ -12,7 +12,7 @@ export async function GET() {
     console.log('Fetching Pokemon with French names...');
     
     // Récupère tous les Pokémon
-    const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=2000');
+    const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1025');
     const data = await response.json();
     
     // Pour chaque Pokémon, on récupère son nom français
