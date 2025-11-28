@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Grid3x3, X, Loader2, Filter, SortAsc, Award } from 'lucide-react';
+import { Search, Grid3x3, X, Loader2, Filter, SortAsc, Award, AlertTriangle } from 'lucide-react';
 
 // Feature flag - à activer plus tard
 const COLLECTION_ENABLED = false;
@@ -152,6 +152,33 @@ export default function PokemonTCGCollection() {
     }
   }
 
+  // Détecter les cartes avec plusieurs raretés dans la même série
+  const cardsWithMultipleRarities = useMemo(() => {
+    const cardsBySetAndName = new Map<string, Set<string>>();
+    
+    selectedPokemonCards.forEach(card => {
+      const key = `${card.set}|||${card.name}`;
+      if (!cardsBySetAndName.has(key)) {
+        cardsBySetAndName.set(key, new Set());
+      }
+      cardsBySetAndName.get(key)!.add(card.rarity);
+    });
+    
+    const problematicCards = new Set<string>();
+    cardsBySetAndName.forEach((rarities, key) => {
+      if (rarities.size > 1) {
+        const [set, name] = key.split('|||');
+        selectedPokemonCards.forEach(card => {
+          if (card.set === set && card.name === name) {
+            problematicCards.add(card.id);
+          }
+        });
+      }
+    });
+    
+    return problematicCards;
+  }, [selectedPokemonCards]);
+
   // Filtrer et trier les cartes
   const filteredAndSortedCards = useMemo(() => {
     let cards = [...selectedPokemonCards];
@@ -199,26 +226,26 @@ export default function PokemonTCGCollection() {
   }, [selectedPokemonCards]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-400 via-slate-300 to-gray-400">
-      {/* Header Pokédex style */}
-      <header className="bg-gradient-to-r from-red-600 via-red-700 to-slate-900 shadow-2xl sticky top-0 z-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-950 to-slate-900">
+      {/* Header moderne */}
+      <header className="bg-gradient-to-r from-slate-900 via-red-900 to-slate-900 shadow-2xl sticky top-0 z-50 border-b border-red-800/30">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-4xl font-extrabold text-white drop-shadow-lg">
-                ⚡ Pokémon TCG Collection
+              <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-red-500 to-orange-400 drop-shadow-2xl">
+                Pokémon TCG
               </h1>
-              <p className="text-red-100 text-sm mt-1">Explorez toutes les cartes du jeu de cartes à collectionner</p>
+              <p className="text-red-200/80 text-sm mt-2 font-medium">Collection complète de cartes</p>
             </div>
 
             {!isLoadingPokemon && (
-              <div className="flex gap-3">
-                <div className="bg-black/30 backdrop-blur-md px-5 py-3 rounded-xl border border-white/20 shadow-lg">
-                  <p className="text-xs text-red-100 font-semibold uppercase tracking-wide">Pokémon</p>
+              <div className="flex gap-4">
+                <div className="bg-gradient-to-br from-red-500/20 to-orange-500/20 backdrop-blur-xl px-6 py-3 rounded-2xl border border-red-400/30 shadow-2xl">
+                  <p className="text-xs text-red-200 font-bold uppercase tracking-wider">Pokémon</p>
                   <p className="text-3xl font-black text-white">{allPokemon.length}</p>
                 </div>
-                <div className="bg-black/30 backdrop-blur-md px-5 py-3 rounded-xl border border-white/20 shadow-lg">
-                  <p className="text-xs text-red-100 font-semibold uppercase tracking-wide">Cartes</p>
+                <div className="bg-gradient-to-br from-orange-500/20 to-red-500/20 backdrop-blur-xl px-6 py-3 rounded-2xl border border-orange-400/30 shadow-2xl">
+                  <p className="text-xs text-orange-200 font-bold uppercase tracking-wider">Cartes</p>
                   <p className="text-3xl font-black text-white">25K+</p>
                 </div>
               </div>
@@ -226,19 +253,19 @@ export default function PokemonTCGCollection() {
           </div>
 
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500" size={22} />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-red-400" size={22} />
             <input
               type="text"
-              placeholder="Rechercher un Pokémon par nom ou numéro..."
+              placeholder="Rechercher un Pokémon..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-6 py-4 bg-white border-2 border-white/50 rounded-2xl focus:ring-4 focus:ring-red-300 focus:border-red-400 transition-all shadow-xl text-gray-800 placeholder-gray-500 text-lg"
+              className="w-full pl-14 pr-6 py-4 bg-slate-800/50 border-2 border-red-500/30 rounded-2xl focus:ring-4 focus:ring-red-500/50 focus:border-red-400 transition-all shadow-2xl text-white placeholder-red-300/50 text-lg backdrop-blur-xl"
             />
           </div>
 
           {!isLoadingPokemon && (
-            <p className="text-sm text-red-100 mt-3 font-medium">
-              ✨ {filteredPokemon.length} Pokémon trouvés
+            <p className="text-sm text-red-200/70 mt-3 font-medium">
+              ⚡ {filteredPokemon.length} résultats
             </p>
           )}
         </div>
@@ -246,50 +273,43 @@ export default function PokemonTCGCollection() {
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {error ? (
-          <div className="bg-red-100 border-2 border-red-300 rounded-lg p-6 text-center shadow-lg">
-            <p className="text-red-700 font-semibold">{error}</p>
-            <button onClick={loadAllPokemon} className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow-md">
+          <div className="bg-red-900/30 border-2 border-red-500/50 rounded-2xl p-8 text-center shadow-2xl backdrop-blur-xl">
+            <p className="text-red-200 font-semibold text-lg">{error}</p>
+            <button onClick={loadAllPokemon} className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-500 hover:to-red-600 transition shadow-lg font-bold">
               Réessayer
             </button>
           </div>
         ) : isLoadingPokemon ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white/50 backdrop-blur-sm rounded-3xl shadow-xl">
-            <Loader2 className="animate-spin text-red-500 mb-4" size={48} />
-            <p className="text-gray-700 font-medium">Chargement du Pokédex...</p>
-            <p className="text-sm text-gray-500 mt-2">(~2 minutes la première fois)</p>
+          <div className="flex flex-col items-center justify-center py-24 bg-slate-800/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-red-500/20">
+            <Loader2 className="animate-spin text-red-500 mb-6" size={56} />
+            <p className="text-white font-bold text-xl">Chargement du Pokédex...</p>
+            <p className="text-sm text-red-300/70 mt-3">(~2 minutes la première fois)</p>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-5">
               {filteredPokemon.map((pokemon) => (
                 <div
                   key={`${pokemon.id}-${pokemon.name}`}
                   onClick={() => setSelectedPokemon(pokemon)}
-                  className="relative rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-110 hover:-rotate-1 p-5 border-2 border-gray-300 hover:border-red-500 group overflow-hidden"
-                  style={{
-                    background: 'radial-gradient(circle at 30% 30%, rgba(239, 68, 68, 0.15) 0%, rgba(255, 255, 255, 0.95) 25%, rgba(255, 255, 255, 0.98) 50%, rgba(15, 23, 42, 0.08) 100%)'
-                  }}
+                  className="relative rounded-2xl shadow-2xl hover:shadow-red-500/50 transition-all duration-300 cursor-pointer transform hover:scale-105 p-4 border border-red-500/20 hover:border-red-400/60 group overflow-hidden bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 via-transparent to-slate-700/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   
-                  {/* Effet Pokéball subtil */}
-                  <div className="absolute top-2 right-2 w-16 h-16 rounded-full opacity-5 pointer-events-none" style={{
-                    background: 'linear-gradient(180deg, #ef4444 0%, #ef4444 45%, #1e293b 45%, #1e293b 55%, white 55%, white 100%)',
-                    border: '2px solid rgba(0,0,0,0.1)'
-                  }}></div>
+                  <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br from-red-500/20 to-orange-500/20 blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
                   
                   <img
                     src={pokemon.imageUrl}
                     alt={pokemon.name}
-                    className="w-full h-36 object-contain mb-3 drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
+                    className="w-full h-32 object-contain mb-3 drop-shadow-2xl group-hover:scale-110 transition-transform duration-300 relative z-10"
                     loading="lazy"
                   />
-                  <div className="text-center relative">
-                    <p className="text-xs text-gray-600 font-mono bg-gray-100 inline-block px-2 py-1 rounded-full mb-1">#{pokemon.number}</p>
-                    <h3 className="font-bold text-gray-800 text-lg">{pokemon.name}</h3>
-                    <div className="flex gap-1 justify-center mt-3 flex-wrap">
+                  <div className="text-center relative z-10">
+                    <p className="text-xs text-red-300 font-mono bg-slate-900/60 inline-block px-3 py-1 rounded-full mb-2 border border-red-500/30">#{pokemon.number}</p>
+                    <h3 className="font-bold text-white text-base mb-2">{pokemon.name}</h3>
+                    <div className="flex gap-1 justify-center flex-wrap">
                       {pokemon.types.slice(0, 2).map((type, idx) => (
-                        <span key={idx} className={`text-xs px-3 py-1 rounded-full font-semibold shadow-md ${TYPE_COLORS[type] || 'bg-gray-100'}`}>
+                        <span key={idx} className={`text-xs px-2 py-1 rounded-lg font-semibold shadow-lg ${TYPE_COLORS[type] || 'bg-gray-100'}`}>
                           {type}
                         </span>
                       ))}
@@ -300,41 +320,41 @@ export default function PokemonTCGCollection() {
             </div>
 
             {filteredPokemon.length === 0 && (
-              <div className="text-center py-12 bg-white/50 backdrop-blur-sm rounded-3xl shadow-xl">
-                <p className="text-gray-700 text-lg font-medium">Aucun Pokémon trouvé</p>
+              <div className="text-center py-16 bg-slate-800/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-red-500/20">
+                <p className="text-red-200 text-lg font-medium">Aucun Pokémon trouvé</p>
               </div>
             )}
           </>
         )}
       </main>
 
-      {/* Modal */}
+      {/* Modal modernisée */}
       {selectedPokemon && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4" onClick={() => setSelectedPokemon(null)}>
-          <div className="bg-gradient-to-br from-white to-gray-50 rounded-3xl max-w-6xl w-full max-h-[90vh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="bg-gradient-to-r from-red-600 via-red-700 to-slate-900 px-6 py-5 rounded-t-3xl flex-shrink-0">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4" onClick={() => setSelectedPokemon(null)}>
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl max-w-6xl w-full max-h-[90vh] flex flex-col shadow-2xl border-2 border-red-500/30" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-gradient-to-r from-slate-900 via-red-900 to-slate-900 px-6 py-5 rounded-t-3xl flex-shrink-0 border-b border-red-500/30">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h2 className="text-3xl font-black text-white drop-shadow-lg">
+                  <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">
                     {selectedPokemon.name}
                   </h2>
                   {!isLoadingCards && (
                     <div className="flex gap-4 mt-2">
-                      <div className="flex items-center gap-2 text-white">
+                      <div className="flex items-center gap-2 text-red-200">
                         <Award size={18} />
                         <span className="text-sm font-medium">
-                          <strong>{selectedPokemonCards.length}</strong> cartes
+                          <strong className="text-white">{selectedPokemonCards.length}</strong> cartes
                         </span>
                       </div>
                       {filteredAndSortedCards.length !== selectedPokemonCards.length && (
-                        <span className="text-sm text-red-100">
+                        <span className="text-sm text-red-300/70">
                           ({filteredAndSortedCards.length} affichées)
                         </span>
                       )}
                     </div>
                   )}
                 </div>
-                <button onClick={() => setSelectedPokemon(null)} className="p-2 hover:bg-white/20 rounded-full transition text-white">
+                <button onClick={() => setSelectedPokemon(null)} className="p-2 hover:bg-red-500/20 rounded-full transition text-red-400 hover:text-red-300">
                   <X size={28} />
                 </button>
               </div>
@@ -342,20 +362,20 @@ export default function PokemonTCGCollection() {
               {!isLoadingCards && selectedPokemonCards.length > 0 && (
                 <div className="space-y-3">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-700" size={16} />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-red-400" size={16} />
                     <input
                       type="text"
                       placeholder="Rechercher par set ou série..."
                       value={cardSearchTerm}
                       onChange={(e) => setCardSearchTerm(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 text-sm border border-white/50 rounded-xl focus:ring-2 focus:ring-white bg-white text-gray-800 placeholder-gray-600"
+                      className="w-full pl-10 pr-4 py-2.5 text-sm border border-red-500/30 rounded-xl focus:ring-2 focus:ring-red-500/50 bg-slate-800/50 text-white placeholder-red-300/50 backdrop-blur-xl"
                     />
                   </div>
 
                   <div className="flex flex-wrap gap-2">
                     <div className="flex items-center gap-2">
-                      <SortAsc size={16} className="text-white" />
-                      <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="text-sm border border-white/50 rounded-lg px-3 py-1.5 bg-white text-gray-800">
+                      <SortAsc size={16} className="text-red-400" />
+                      <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="text-sm border border-red-500/30 rounded-xl px-3 py-2 bg-slate-800/50 text-white backdrop-blur-xl">
                         <option value="set">Par Set</option>
                         <option value="rarity">Par Rareté</option>
                         <option value="number">Par Numéro</option>
@@ -365,8 +385,8 @@ export default function PokemonTCGCollection() {
 
                     {uniqueRarities.length > 1 && (
                       <div className="flex items-center gap-2">
-                        <Filter size={16} className="text-white" />
-                        <select value={filterRarity} onChange={(e) => setFilterRarity(e.target.value)} className="text-sm border border-white/50 rounded-lg px-3 py-1.5 bg-white text-gray-800">
+                        <Filter size={16} className="text-red-400" />
+                        <select value={filterRarity} onChange={(e) => setFilterRarity(e.target.value)} className="text-sm border border-red-500/30 rounded-xl px-3 py-2 bg-slate-800/50 text-white backdrop-blur-xl">
                           <option value="all">Toutes raretés</option>
                           {uniqueRarities.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
@@ -374,14 +394,14 @@ export default function PokemonTCGCollection() {
                     )}
 
                     {uniqueSeries.length > 1 && (
-                      <select value={filterSeries} onChange={(e) => setFilterSeries(e.target.value)} className="text-sm border border-white/50 rounded-lg px-3 py-1.5 bg-white text-gray-800">
+                      <select value={filterSeries} onChange={(e) => setFilterSeries(e.target.value)} className="text-sm border border-red-500/30 rounded-xl px-3 py-2 bg-slate-800/50 text-white backdrop-blur-xl">
                         <option value="all">Toutes séries</option>
                         {uniqueSeries.map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
                     )}
 
                     {(cardSearchTerm || filterRarity !== 'all' || filterSeries !== 'all') && (
-                      <button onClick={() => { setCardSearchTerm(''); setFilterRarity('all'); setFilterSeries('all'); }} className="text-sm text-white hover:text-red-100 font-medium bg-white/20 px-3 py-1 rounded-lg">
+                      <button onClick={() => { setCardSearchTerm(''); setFilterRarity('all'); setFilterSeries('all'); }} className="text-sm text-red-300 hover:text-red-200 font-medium bg-red-500/20 px-3 py-2 rounded-xl border border-red-500/30">
                         Réinitialiser
                       </button>
                     )}
@@ -390,61 +410,75 @@ export default function PokemonTCGCollection() {
               )}
             </div>
 
-            <div className="p-6 overflow-y-auto flex-1 bg-gradient-to-br from-red-400 via-slate-300 to-gray-400">
+            <div className="p-6 overflow-y-auto flex-1">
               {isLoadingCards ? (
-                <div className="flex flex-col items-center justify-center py-20">
-                  <Loader2 className="animate-spin text-red-500 mb-4" size={48} />
-                  <p className="text-gray-600">Chargement des cartes...</p>
+                <div className="flex flex-col items-center justify-center py-24">
+                  <Loader2 className="animate-spin text-red-500 mb-6" size={56} />
+                  <p className="text-white font-bold text-xl">Chargement des cartes...</p>
                 </div>
               ) : filteredAndSortedCards.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {filteredAndSortedCards.map((card) => (
-                    <div key={card.id} className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-4 hover:shadow-2xl hover:scale-105 transition-all duration-300 border-2 border-gray-200 hover:border-red-300 relative group">
-                      {card.price && (
-                        <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
-                          {card.price.toFixed(2)}€
-                        </div>
-                      )}
-                      
-                      <img src={card.smallImage} alt={card.name} className="w-full rounded-lg shadow-md mb-3 group-hover:shadow-xl transition-shadow" loading="lazy" />
-                      
-                      <div className="text-sm space-y-2">
-                        <p className="font-semibold text-gray-800 truncate text-center">{card.set}</p>
-                        <div className="flex justify-center">
-                          <span className={`inline-block text-xs px-3 py-1 rounded-full font-medium ${RARITY_COLORS[card.rarity] || 'bg-gray-100'}`}>
-                            {card.rarity}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span>#{card.number}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-3 space-y-2">
-                        {card.cardmarketUrl && (
-                          <a href={card.cardmarketUrl} target="_blank" rel="noopener noreferrer" className="block w-full py-2 text-xs bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition text-center font-medium shadow-md hover:shadow-lg">
-                            📊 Voir sur Cardmarket
-                          </a>
+                  {filteredAndSortedCards.map((card) => {
+                    const hasPriceWarning = cardsWithMultipleRarities.has(card.id);
+                    
+                    return (
+                      <div key={card.id} className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-4 hover:shadow-2xl hover:shadow-red-500/30 hover:scale-105 transition-all duration-300 border border-red-500/20 hover:border-red-400/50 relative group">
+                        {card.price && (
+                          <div className={`absolute top-2 right-2 ${hasPriceWarning ? 'bg-gradient-to-r from-orange-500 to-red-500' : 'bg-gradient-to-r from-green-500 to-emerald-600'} text-white text-xs font-bold px-2.5 py-1.5 rounded-lg shadow-xl z-10 flex items-center gap-1`}>
+                            {hasPriceWarning && <AlertTriangle size={12} />}
+                            {card.price.toFixed(2)}€
+                          </div>
                         )}
-                        <button disabled={!COLLECTION_ENABLED} title={!COLLECTION_ENABLED ? "Bientôt disponible" : ""} className={`w-full py-2 text-xs rounded-lg transition font-medium ${COLLECTION_ENABLED ? 'bg-slate-700 text-white hover:bg-slate-800 cursor-pointer shadow-md hover:shadow-lg' : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50'}`}>
-                          ⭐ Ajouter à ma collection
-                        </button>
+                        
+                        <img src={card.smallImage} alt={card.name} className="w-full rounded-xl shadow-lg mb-3 group-hover:shadow-red-500/50 transition-shadow border border-red-500/20" loading="lazy" />
+                        
+                        <div className="text-sm space-y-2">
+                          <p className="font-bold text-white truncate text-center">{card.set}</p>
+                          <div className="flex justify-center">
+                            <span className={`inline-block text-xs px-3 py-1.5 rounded-lg font-bold shadow-lg ${RARITY_COLORS[card.rarity] || 'bg-gray-100'}`}>
+                              {card.rarity}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-center text-xs text-red-300/70 font-mono">
+                            <span>#{card.number}</span>
+                          </div>
+                        </div>
+                        
+                        {hasPriceWarning && card.price && (
+                          <div className="mt-2 bg-orange-500/20 border border-orange-500/40 rounded-lg p-2 flex items-start gap-2">
+                            <AlertTriangle size={14} className="text-orange-400 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs text-orange-200 leading-tight">
+                              Prix possiblement erroné (plusieurs versions)
+                            </p>
+                          </div>
+                        )}
+                        
+                        <div className="mt-3 space-y-2">
+                          {card.cardmarketUrl && (
+                            <a href={card.cardmarketUrl} target="_blank" rel="noopener noreferrer" className="block w-full py-2.5 text-xs bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl hover:from-red-500 hover:to-orange-500 transition text-center font-bold shadow-lg hover:shadow-red-500/50">
+                              📊 Cardmarket
+                            </a>
+                          )}
+                          <button disabled={!COLLECTION_ENABLED} title={!COLLECTION_ENABLED ? "Bientôt disponible" : ""} className={`w-full py-2.5 text-xs rounded-xl transition font-bold ${COLLECTION_ENABLED ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white hover:from-slate-600 hover:to-slate-700 cursor-pointer shadow-lg' : 'bg-slate-800/50 text-slate-500 cursor-not-allowed opacity-50 border border-slate-700/50'}`}>
+                            ⭐ Ma collection
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : selectedPokemonCards.length > 0 ? (
-                <div className="text-center py-12">
-                  <Filter size={48} className="mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-500">Aucune carte ne correspond aux filtres</p>
-                  <button onClick={() => { setCardSearchTerm(''); setFilterRarity('all'); setFilterSeries('all'); }} className="mt-4 text-red-600 hover:text-red-700 font-medium">
+                <div className="text-center py-16 bg-slate-800/30 backdrop-blur-xl rounded-2xl border border-red-500/20">
+                  <Filter size={48} className="mx-auto text-red-500/50 mb-4" />
+                  <p className="text-red-200">Aucune carte ne correspond aux filtres</p>
+                  <button onClick={() => { setCardSearchTerm(''); setFilterRarity('all'); setFilterSeries('all'); }} className="mt-4 text-red-400 hover:text-red-300 font-bold">
                     Réinitialiser les filtres
                   </button>
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <Grid3x3 size={48} className="mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-500">Aucune carte trouvée pour ce Pokémon</p>
+                <div className="text-center py-16 bg-slate-800/30 backdrop-blur-xl rounded-2xl border border-red-500/20">
+                  <Grid3x3 size={48} className="mx-auto text-red-500/50 mb-4" />
+                  <p className="text-red-200">Aucune carte trouvée pour ce Pokémon</p>
                 </div>
               )}
             </div>
