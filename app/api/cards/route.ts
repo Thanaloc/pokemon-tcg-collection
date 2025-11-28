@@ -27,9 +27,31 @@ export async function GET(request: Request) {
       return NextResponse.json([]);
     }
     
-    const matchingCards = cards.filter((card: any) => 
-      card.name && card.name.toLowerCase().includes(pokemonName.toLowerCase())
-    );
+    const normalize = (str: string) => str.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .trim();
+    
+    const searchNameNormalized = normalize(pokemonName);
+    
+    const matchingCards = cards.filter((card: any) => {
+      if (!card.name) return false;
+      
+      const cardNameNormalized = normalize(card.name);
+      
+      if (cardNameNormalized === searchNameNormalized) return true;
+      if (cardNameNormalized.startsWith(searchNameNormalized + ' ')) return true;
+      if (cardNameNormalized.startsWith(searchNameNormalized + '-')) return true;
+      
+      const withoutSpaces = cardNameNormalized.replace(/[\s-]/g, '');
+      const searchWithoutSpaces = searchNameNormalized.replace(/[\s-]/g, '');
+      if (withoutSpaces.startsWith(searchWithoutSpaces) && 
+          withoutSpaces.length > searchWithoutSpaces.length) {
+        const nextChar = card.name.charAt(pokemonName.length);
+        if (/[A-Z0-9]/.test(nextChar)) return true;
+      }
+      
+      return false;
+    });
     
     console.log('Found', matchingCards.length, 'matching cards for', pokemonName);
     
@@ -45,6 +67,8 @@ export async function GET(request: Request) {
     
     const detailedCards = await Promise.all(detailedCardsPromises);
     
+    let debugCount = 0;
+    
     const formattedCards = detailedCards
       .filter((card: any) => card !== null && card.image)
       .filter((card: any) => {
@@ -56,19 +80,27 @@ export async function GET(request: Request) {
           ? card.image 
           : `https://assets.tcgdex.net${card.image}`;
         
-        // Extraire les infos Cardmarket
-        const cardmarketPrice = card.pricing?.cardmarket?.avg30 || null;
+        // Essaie plusieurs chemins possibles
+        let cardmarketPrice = null;
+        
+        if (card.pricing.cardmarket) {
+          cardmarketPrice = card.pricing.cardmarket.trend || 
+                           card.pricing.cardmarket.avg7 || 
+                           card.pricing.cardmarket.avg30 ||
+                           card.pricing.cardmarket.avg1 ||
+                           null;
+        }
+        
+        // Ton URL Google formatée
         const query = `${card.name} ${card.localId || card.cardmarket?.number || ''} ${card.set?.name} cardmarket`;
         const encodedQuery = encodeURIComponent(query);
         const cardmarketUrl = `https://www.google.com/search?q=${encodedQuery}`;
-        
-        console.log(card.set.name);
 
         return {
           id: card.id,
           name: card.name,
           set: card.set?.name || 'Unknown',
-          rarity: card.rarity || 'Common',
+          rarity: card.rarity || 'Sans Rareté',
           image: `${imageBase}/high.webp`,
           smallImage: `${imageBase}/low.jpg`,
           number: card.localId || card.cardmarket?.number || '',
