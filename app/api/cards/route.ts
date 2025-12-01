@@ -1,4 +1,5 @@
-﻿import { NextResponse } from 'next/server';
+﻿
+import { NextResponse } from 'next/server';
 import TCGdex from '@tcgdex/sdk';
 
 const tcgdex = new TCGdex('fr');
@@ -67,8 +68,6 @@ export async function GET(request: Request) {
     
     const detailedCards = await Promise.all(detailedCardsPromises);
     
-    let debugCount = 0;
-    
     const formattedCards = detailedCards
       .filter((card: any) => card !== null && card.image)
       .filter((card: any) => {
@@ -80,19 +79,13 @@ export async function GET(request: Request) {
           ? card.image 
           : `https://assets.tcgdex.net${card.image}`;
         
-        // Essaie plusieurs chemins possibles
-        let cardmarketPrice = null;
+        const cardmarketPrice = card.cardmarket?.prices?.averageSellPrice || 
+                                card.cardmarket?.prices?.avg7 || 
+                                card.cardmarket?.prices?.avg30 ||
+                                card.cardmarket?.prices?.trendPrice ||
+                                null;
         
-        if (card.pricing.cardmarket) {
-          cardmarketPrice = card.pricing.cardmarket.trend || 
-                           card.pricing.cardmarket.avg7 || 
-                           card.pricing.cardmarket.avg30 ||
-                           card.pricing.cardmarket.avg1 ||
-                           null;
-        }
-        
-        // Ton URL Google formatée
-        const query = `${card.name} ${card.localId || card.cardmarket?.number || ''} ${card.set?.name} cardmarket`;
+        const query = `${card.name} ${card.localId || card.cardmarket?.number || ''} ${card.set?.name || ''} cardmarket`;
         const encodedQuery = encodeURIComponent(query);
         const cardmarketUrl = `https://www.google.com/search?q=${encodedQuery}`;
 

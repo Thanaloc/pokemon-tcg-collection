@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "Pokemon TCG Collection",
   description: "A simple tool to visualize and compare pokemon cards !",
   icons: {
-    icon: '/etoile.ico',
+    icon: '/logo.ico',
   },
 };
 
