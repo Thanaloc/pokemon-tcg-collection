@@ -155,7 +155,7 @@ export default function PokemonTCGCollection() {
   // Détecter les cartes avec plusieurs raretés dans la même série
   const cardsWithMultipleRarities = useMemo(() => {
     const cardsBySetAndName = new Map<string, Set<string>>();
-    
+
     selectedPokemonCards.forEach(card => {
       const key = `${card.set}|||${card.name}`;
       if (!cardsBySetAndName.has(key)) {
@@ -163,7 +163,7 @@ export default function PokemonTCGCollection() {
       }
       cardsBySetAndName.get(key)!.add(card.rarity);
     });
-    
+
     const problematicCards = new Set<string>();
     cardsBySetAndName.forEach((rarities, key) => {
       if (rarities.size > 1) {
@@ -175,7 +175,7 @@ export default function PokemonTCGCollection() {
         });
       }
     });
-    
+
     return problematicCards;
   }, [selectedPokemonCards]);
 
@@ -203,7 +203,7 @@ export default function PokemonTCGCollection() {
         case 'set':
           return a.set.localeCompare(b.set);
         case 'rarity':
-          const rarityOrder = ['Sans Rareté','Commune', 'Peu Commune', 'Rare', 'Rare Holo', 'Holo Rare', 'Double rare', 'Ultra Rare', 'Holo Rare V', 'Holo Rare VMAX', 'Holo Rare VSTAR', 'Radieux Rare', 'Illustration rare', 'Shiny Rare', 'Rainbow Rare', 'Secrète', 'Hyper rare', 'Magnifique rare', 'Illustration spéciale rare', 'Shiny Rare VMAX', 'Chromatique ultra rare', 'Méga Hyper Rare', 'Rare Noir Blanc'];
+          const rarityOrder = ['Sans Rareté', 'Commune', 'Peu Commune', 'Rare', 'Rare Holo', 'Holo Rare', 'Double rare', 'Ultra Rare', 'Holo Rare V', 'Holo Rare VMAX', 'Holo Rare VSTAR', 'Radieux Rare', 'Illustration rare', 'Shiny Rare', 'Rainbow Rare', 'Secrète', 'Hyper rare', 'Magnifique rare', 'Illustration spéciale rare', 'Shiny Rare VMAX', 'Chromatique ultra rare', 'Méga Hyper Rare', 'Rare Noir Blanc'];
           return rarityOrder.reverse().indexOf(a.rarity) - rarityOrder.indexOf(b.rarity);
         case 'number':
           return parseInt(a.number) - parseInt(b.number);
@@ -228,8 +228,13 @@ export default function PokemonTCGCollection() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-950 to-slate-900">
       {/* Header moderne */}
-      <header className="bg-gradient-to-r from-slate-900 via-red-900 to-slate-900 shadow-2xl sticky top-0 z-50 border-b border-red-800/30">
-        <div className="max-w-7xl mx-auto px-4 py-6">
+      <header className="bg-gradient-to-r from-slate-900/40 via-red-900/40 to-slate-900/40 backdrop-blur-xl shadow-2xl sticky top-0 z-50 border-b border-red-800/30 relative overflow-hidden">
+        {/* Pattern hexagonal en arrière-plan */}
+        <div className="absolute inset-0 opacity-10" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l25.98 15v30L30 60 4.02 45V15z' fill='none' stroke='%23ef4444' stroke-width='1.5'/%3E%3C/svg%3E")`,
+          backgroundSize: '60px 60px'
+        }}></div>
+        <div className="max-w-7xl mx-auto px-4 py-6 relative z-10">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-red-500 to-orange-400 drop-shadow-2xl">
@@ -292,12 +297,12 @@ export default function PokemonTCGCollection() {
                 <div
                   key={`${pokemon.id}-${pokemon.name}`}
                   onClick={() => setSelectedPokemon(pokemon)}
-                  className="relative rounded-2xl shadow-2xl hover:shadow-red-500/50 transition-all duration-300 cursor-pointer transform hover:scale-105 p-4 border border-red-500/20 hover:border-red-400/60 group overflow-hidden bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm"
+                  className="relative rounded-2xl shadow-2xl hover:shadow-red-500/50 transition-all duration-300 cursor-pointer transform hover:scale-105 hover:rotate-2 p-4 border border-red-500/20 hover:border-red-400/60 group overflow-hidden bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  
+
                   <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br from-red-500/20 to-orange-500/20 blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
-                  
+
                   <img
                     src={pokemon.imageUrl}
                     alt={pokemon.name}
@@ -332,8 +337,13 @@ export default function PokemonTCGCollection() {
       {selectedPokemon && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4" onClick={() => setSelectedPokemon(null)}>
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl max-w-6xl w-full max-h-[90vh] flex flex-col shadow-2xl border-2 border-red-500/30" onClick={(e) => e.stopPropagation()}>
-            <div className="bg-gradient-to-r from-slate-900 via-red-900 to-slate-900 px-6 py-5 rounded-t-3xl flex-shrink-0 border-b border-red-500/30">
-              <div className="flex items-center justify-between mb-3">
+            <div className="bg-gradient-to-r from-slate-900/40 via-red-900/40 to-slate-900/40 backdrop-blur-xl px-6 py-5 rounded-t-3xl flex-shrink-0 border-b border-red-500/30 relative overflow-hidden">
+              {/* Pattern hexagonal en arrière-plan */}
+              <div className="absolute inset-0 opacity-10" style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l25.98 15v30L30 60 4.02 45V15z' fill='none' stroke='%23ef4444' stroke-width='1.5'/%3E%3C/svg%3E")`,
+                backgroundSize: '60px 60px'
+              }}></div>
+              <div className="flex items-center justify-between mb-3 relative z-10">
                 <div>
                   <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">
                     {selectedPokemon.name}
@@ -360,7 +370,7 @@ export default function PokemonTCGCollection() {
               </div>
 
               {!isLoadingCards && selectedPokemonCards.length > 0 && (
-                <div className="space-y-3">
+                <div className="space-y-3 relative z-10">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-red-400" size={16} />
                     <input
@@ -420,7 +430,7 @@ export default function PokemonTCGCollection() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {filteredAndSortedCards.map((card) => {
                     const hasPriceWarning = cardsWithMultipleRarities.has(card.id);
-                    
+
                     return (
                       <div key={card.id} className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-4 hover:shadow-2xl hover:shadow-red-500/30 hover:scale-105 transition-all duration-300 border border-red-500/20 hover:border-red-400/50 relative group">
                         {card.price && (
@@ -429,9 +439,9 @@ export default function PokemonTCGCollection() {
                             {card.price.toFixed(2)}€
                           </div>
                         )}
-                        
+
                         <img src={card.smallImage} alt={card.name} className="w-full rounded-xl shadow-lg mb-3 group-hover:shadow-red-500/50 transition-shadow border border-red-500/20" loading="lazy" />
-                        
+
                         <div className="text-sm space-y-2">
                           <p className="font-bold text-white truncate text-center">{card.set}</p>
                           <div className="flex justify-center">
@@ -443,7 +453,7 @@ export default function PokemonTCGCollection() {
                             <span>#{card.number}</span>
                           </div>
                         </div>
-                        
+
                         {hasPriceWarning && card.price && (
                           <div className="mt-2 bg-orange-500/20 border border-orange-500/40 rounded-lg p-2 flex items-start gap-2">
                             <AlertTriangle size={14} className="text-orange-400 flex-shrink-0 mt-0.5" />
@@ -452,7 +462,7 @@ export default function PokemonTCGCollection() {
                             </p>
                           </div>
                         )}
-                        
+
                         <div className="mt-3 space-y-2">
                           {card.cardmarketUrl && (
                             <a href={card.cardmarketUrl} target="_blank" rel="noopener noreferrer" className="block w-full py-2.5 text-xs bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl hover:from-red-500 hover:to-orange-500 transition text-center font-bold shadow-lg hover:shadow-red-500/50">
