@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 :root{
   --bg: #0b0b0c;
@@ -27,7 +27,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ✅ Scrollbar personnalisée grise */
+/* Scrollbar personnalise grise */
 .custom-scrollbar::-webkit-scrollbar {
   width: 12px;
 }

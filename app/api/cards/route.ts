@@ -69,23 +69,25 @@ export async function GET(request: Request) {
     const detailedCards = await Promise.all(detailedCardsPromises);
     
     const formattedCards = detailedCards
-      .filter((card: any) => card !== null && card.image)
+      .filter((card: any) => card !== null)
       .filter((card: any) => {
         const setId = card.set?.id || '';
         return !/^(A\d|P-A)/.test(setId);
       })
       .map((card: any) => {
-        const imageBase = card.image.startsWith('http') 
-          ? card.image 
-          : `https://assets.tcgdex.net${card.image}`;
+        const imageBase = card.image 
+  ? (card.image.startsWith('http') 
+      ? card.image 
+      : `https://assets.tcgdex.net${card.image}`)
+  : null;
         
-        const cardmarketPrice = card.cardmarket?.prices?.averageSellPrice || 
-                                card.cardmarket?.prices?.avg7 || 
-                                card.cardmarket?.prices?.avg30 ||
-                                card.cardmarket?.prices?.trendPrice ||
+        const cardmarketPrice = card.pricing?.cardmarket?.avg || 
+                                card.pricing?.cardmarket?.avg7 || 
+                                card.pricing?.cardmarket?.avg30 ||
+                                card.pricing?.cardmarket?.trendPrice ||
                                 null;
         
-        const query = `${card.name} ${card.localId || card.cardmarket?.number || ''} ${card.set?.name || ''} cardmarket`;
+        const query = `${card.name} ${card.localId || card.pricing?.cardmarket?.number || ''} ${card.set?.name || ''} cardmarket`;
         const encodedQuery = encodeURIComponent(query);
         const cardmarketUrl = `https://www.google.com/search?q=${encodedQuery}`;
 
@@ -94,8 +96,8 @@ export async function GET(request: Request) {
           name: card.name,
           set: card.set?.name || 'Unknown',
           rarity: card.rarity || 'Sans Rareté',
-          image: `${imageBase}/high.webp`,
-          smallImage: `${imageBase}/low.jpg`,
+  image: imageBase ? `${imageBase}/high.webp` : '/placeholder-card.png',
+  smallImage: imageBase ? `${imageBase}/low.jpg` : '/placeholder-card.png',
           number: card.localId || card.cardmarket?.number || '',
           series: card.set?.series || '',
           price: cardmarketPrice,
