@@ -3,4 +3,6 @@ export const RARITY_ORDER = [
   'Ultra Rare','Holo Rare V','Holo Rare VMAX','Holo Rare VSTAR','Radieux Rare',
   'Illustration rare','Shiny Rare','Rainbow Rare','Secrète','Hyper rare','Magnifique rare',
   'Illustration spéciale rare','Shiny rare VMAX','Chromatique ultra rare','Méga Hyper Rare','Rare Noir Blanc'
-];
+] as const;
+
+export type Rarity = typeof RARITY_ORDER[number];

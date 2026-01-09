@@ -51,23 +51,23 @@ export async function GET(request: Request) {
 
     // Format cards for frontend
     const formattedCards = cards.map((card: any) => {
-      const cardmarketUrl = `https://www.google.com/search?q=${encodeURIComponent(
-        `${card.name} ${card.number} ${card.set.name} cardmarket`
-      )}`;
+  const cardmarketUrl = `https://www.google.com/search?q=${encodeURIComponent(
+    `${card.name} ${card.number} ${card.set.name} cardmarket`
+  )}`;
 
-      return {
-        id: card.id,
-        name: card.name,
-        set: card.set.name,
-        rarity: card.rarity,
-        image: card.imageFr || '/placeholder.png',
-        smallImage: card.imageSmallFr || '/placeholder.png',
-        number: card.number,
-        series: card.set.series,
-        price: card.price?.cardmarketPrice || null,
-        cardmarketUrl: cardmarketUrl,
-      };
-    });
+  return {
+    id: card.id,
+    name: card.name,
+    set: card.set.name,
+    rarity: card.rarity,
+    image: card.imageFr || card.imageEn || 'placeholder-card.png',
+    smallImage: card.imageSmallFr || card.imageSmallEn || 'placeholder-card.png',
+    number: card.number,
+    series: card.set.series,
+    price: card.price?.cardmarketPrice || null,
+    cardmarketUrl: cardmarketUrl,
+  };
+});
 
     console.log('Found', formattedCards.length, 'cards for', pokemonName);
     return NextResponse.json(formattedCards);

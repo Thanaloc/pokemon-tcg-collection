@@ -55,7 +55,7 @@ export default function Header({ searchTerm, setSearchTerm, pokemonCount, isLoad
           <div className="flex items-center gap-4">
             {!isLoading && <Stats pokemonCount={pokemonCount} />}
             
-            {/* Auth buttons */}
+            {/* Auth buttons TEMPORALRILY DISABLED 
             {session?.user ? (
               <div className="flex items-center gap-3">
                 <Link 
@@ -82,6 +82,8 @@ export default function Header({ searchTerm, setSearchTerm, pokemonCount, isLoad
                 </Link>
               </div>
             )}
+              
+          */}
           </div>
         </div>
 
