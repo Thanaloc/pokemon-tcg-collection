@@ -50,7 +50,7 @@ export async function GET(request: Request) {
     });
 
     // Format cards for frontend
-    const formattedCards = cards.map((card) => {
+    const formattedCards = cards.map((card: any) => {
       const cardmarketUrl = `https://www.google.com/search?q=${encodeURIComponent(
         `${card.name} ${card.number} ${card.set.name} cardmarket`
       )}`;
