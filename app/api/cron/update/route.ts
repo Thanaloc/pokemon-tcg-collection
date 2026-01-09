@@ -58,12 +58,12 @@ export async function GET(request: Request) {
     const existingSets = await prisma.set.findMany({
       select: { id: true }
     });
-    const existingSetIds = new Set(existingSets.map(s => s.id));
+    const existingSetIds = new Set(existingSets.map((s: any) => s.id));
 
     const existingCards = await prisma.card.findMany({
       select: { id: true }
     });
-    const existingCardIds = new Set(existingCards.map(c => c.id));
+    const existingCardIds = new Set(existingCards.map((c: any) => c.id));
 
     // Process only first 5 sets for testing (remove this limit in production)
     const setsToProcess = setsData.slice(0, 5);
