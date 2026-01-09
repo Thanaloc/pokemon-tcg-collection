@@ -1,6 +1,11 @@
+'use client';
+
 import React from 'react';
+import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import SearchBar from './SearchBar';
 import Stats from './Stats';
+import UserMenu from './UserMenu';
 
 interface Props {
   searchTerm: string;
@@ -10,6 +15,8 @@ interface Props {
 }
 
 export default function Header({ searchTerm, setSearchTerm, pokemonCount, isLoading }: Props) {
+  const { data: session } = useSession();
+
   return (
     <header className="sticky top-0 z-40 px-6 py-8 border-b border-red-500/20 bg-gradient-to-r from-slate-900/95 via-red-900/40 to-slate-900/95 backdrop-blur-xl overflow-hidden shadow-2xl">
       
@@ -45,7 +52,37 @@ export default function Header({ searchTerm, setSearchTerm, pokemonCount, isLoad
             </div>
           </div>
 
-          {!isLoading && <Stats pokemonCount={pokemonCount} />}
+          <div className="flex items-center gap-4">
+            {!isLoading && <Stats pokemonCount={pokemonCount} />}
+            
+            {/* Auth buttons */}
+            {session?.user ? (
+              <div className="flex items-center gap-3">
+                <Link 
+                  href="/collection" 
+                  className="text-white hover:text-red-200 font-medium transition-colors text-sm"
+                >
+                  Ma Collection
+                </Link>
+                <UserMenu user={session.user} />
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Link 
+                  href="/login" 
+                  className="text-white hover:text-red-200 font-medium transition-colors text-sm"
+                >
+                  Connexion
+                </Link>
+                <Link 
+                  href="/register" 
+                  className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white px-4 py-2 rounded-lg font-bold transition-all text-sm shadow-lg"
+                >
+                  S'inscrire
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
 
         <SearchBar value={searchTerm} onChange={setSearchTerm} />
