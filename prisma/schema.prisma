@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Pokemon {
+  id      Int     @id
+  nameFr  String  @map("name_fr")
+  nameEn  String  @map("name_en")
+  cards   Card[]
+  
+  @@map("pokemon")
+}
+
+model Set {
+  id          String   @id
+  name        String
+  series      String
+  releaseDate DateTime @map("release_date")
+  cards       Card[]
+  
+  @@map("sets")
+}
+
+model Card {
+  id          String   @id
+  pokemonId   Int      @map("pokemon_id")
+  setId       String   @map("set_id")
+  number      String
+  name        String
+  rarity      String
+  imageFr     String?  @map("image_fr")
+  imageEn     String?  @map("image_en")
+  imageSmallFr String? @map("image_small_fr")
+  imageSmallEn String? @map("image_small_en")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  pokemon     Pokemon  @relation(fields: [pokemonId], references: [id])
+  set         Set      @relation(fields: [setId], references: [id])
+  price       Price?
+  userCollections UserCollection[]
+  
+  @@map("cards")
+}
+
+model Price {
+  id              Int      @id @default(autoincrement())
+  cardId          String   @unique @map("card_id")
+  tcgplayerPrice  Float?   @map("tcgplayer_price")
+  cardmarketPrice Float?   @map("cardmarket_price")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  card            Card     @relation(fields: [cardId], references: [id])
+  
+  @@map("prices")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  
+  collections   UserCollection[]
+  
+  @@map("users")
+}
+
+model UserCollection {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id")
+  cardId    String   @map("card_id")
+  quantity  Int      @default(1)
+  addedAt   DateTime @default(now()) @map("added_at")
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card      Card     @relation(fields: [cardId], references: [id])
+  
+  @@unique([userId, cardId])
+  @@map("user_collections")
+}

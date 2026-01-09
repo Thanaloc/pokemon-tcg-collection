@@ -1,9 +1,5 @@
-﻿
-import { NextResponse } from 'next/server';
-import TCGdex from '@tcgdex/sdk';
-
-const tcgdex = new TCGdex('fr');
-const cardsCache = new Map<string, any>();
+﻿import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -12,106 +8,72 @@ export async function GET(request: Request) {
   if (!pokemonName) {
     return NextResponse.json({ error: 'Pokemon name required' }, { status: 400 });
   }
-  
-  if (cardsCache.has(pokemonName)) {
-    console.log('Cache hit for', pokemonName);
-    return NextResponse.json(cardsCache.get(pokemonName));
-  }
-  
+
   try {
-    console.log('Fetching cards for', pokemonName, 'from TCGdex...');
-    
-    const cards = await tcgdex.fetch('cards');
-    
-    if (!cards || !Array.isArray(cards)) {
-      console.log('No cards data received');
+    console.log('Fetching cards for', pokemonName, 'from database...');
+
+    const normalize = (str: string) => str.toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+
+    const searchNameNormalized = normalize(pokemonName);
+
+    // Find matching Pokemon
+    const pokemon = await prisma.pokemon.findFirst({
+      where: {
+        OR: [
+          { nameFr: { equals: pokemonName, mode: 'insensitive' } },
+          { nameEn: { equals: pokemonName, mode: 'insensitive' } },
+        ],
+      },
+    });
+
+    if (!pokemon) {
+      console.log('Pokemon not found:', pokemonName);
       return NextResponse.json([]);
     }
-    
-    const normalize = (str: string) => str.toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-      .trim();
-    
-    const searchNameNormalized = normalize(pokemonName);
-    
-    const matchingCards = cards.filter((card: any) => {
-      if (!card.name) return false;
-      
-      const cardNameNormalized = normalize(card.name);
-      
-      if (cardNameNormalized === searchNameNormalized) return true;
-      if (cardNameNormalized.startsWith(searchNameNormalized + ' ')) return true;
-      if (cardNameNormalized.startsWith(searchNameNormalized + '-')) return true;
-      
-      const withoutSpaces = cardNameNormalized.replace(/[\s-]/g, '');
-      const searchWithoutSpaces = searchNameNormalized.replace(/[\s-]/g, '');
-      if (withoutSpaces.startsWith(searchWithoutSpaces) && 
-          withoutSpaces.length > searchWithoutSpaces.length) {
-        const nextChar = card.name.charAt(pokemonName.length);
-        if (/[A-Z0-9]/.test(nextChar)) return true;
-      }
-      
-      return false;
-    });
-    
-    console.log('Found', matchingCards.length, 'matching cards for', pokemonName);
-    
-    const detailedCardsPromises = matchingCards.map(async (card: any) => {
-      try {
-        const fullCard = await tcgdex.fetch('cards', card.id);
-        return fullCard;
-      } catch (error) {
-        console.error('Error fetching card details:', card.id, error);
-        return null;
-      }
-    });
-    
-    const detailedCards = await Promise.all(detailedCardsPromises);
-    
-    const formattedCards = detailedCards
-      .filter((card: any) => card !== null)
-      .filter((card: any) => {
-        const setId = card.set?.id || '';
-        return !/^(A\d|P-A)/.test(setId);
-      })
-      .map((card: any) => {
-        const imageBase = card.image 
-  ? (card.image.startsWith('http') 
-      ? card.image 
-      : `https://assets.tcgdex.net${card.image}`)
-  : null;
-        
-        const cardmarketPrice = card.pricing?.cardmarket?.avg || 
-                                card.pricing?.cardmarket?.avg7 || 
-                                card.pricing?.cardmarket?.avg30 ||
-                                card.pricing?.cardmarket?.trendPrice ||
-                                null;
-        
-        const query = `${card.name} ${card.localId || card.pricing?.cardmarket?.number || ''} ${card.set?.name || ''} cardmarket`;
-        const encodedQuery = encodeURIComponent(query);
-        const cardmarketUrl = `https://www.google.com/search?q=${encodedQuery}`;
 
-        return {
-          id: card.id,
-          name: card.name,
-          set: card.set?.name || 'Unknown',
-          rarity: card.rarity || 'Sans Rareté',
-  image: imageBase ? `${imageBase}/high.webp` : '/placeholder-card.png',
-  smallImage: imageBase ? `${imageBase}/low.jpg` : '/placeholder-card.png',
-          number: card.localId || card.cardmarket?.number || '',
-          series: card.set?.series || '',
-          price: cardmarketPrice,
-          cardmarketUrl: cardmarketUrl,
-        };
-      });
-    
-    console.log('Formatted', formattedCards.length, 'cards after filtering');
-    
-    cardsCache.set(pokemonName, formattedCards);
+    // Fetch all cards for this Pokemon
+    const cards = await prisma.card.findMany({
+      where: {
+        pokemonId: pokemon.id,
+      },
+      include: {
+        set: true,
+        price: true,
+      },
+      orderBy: [
+        { set: { releaseDate: 'desc' } },
+        { number: 'asc' },
+      ],
+    });
+
+    // Format cards for frontend
+    const formattedCards = cards.map((card) => {
+      const cardmarketUrl = `https://www.google.com/search?q=${encodeURIComponent(
+        `${card.name} ${card.number} ${card.set.name} cardmarket`
+      )}`;
+
+      return {
+        id: card.id,
+        name: card.name,
+        set: card.set.name,
+        rarity: card.rarity,
+        image: card.imageFr || '/placeholder.png',
+        smallImage: card.imageSmallFr || '/placeholder.png',
+        number: card.number,
+        series: card.set.series,
+        price: card.price?.cardmarketPrice || null,
+        cardmarketUrl: cardmarketUrl,
+      };
+    });
+
+    console.log('Found', formattedCards.length, 'cards for', pokemonName);
     return NextResponse.json(formattedCards);
-    
+
   } catch (error: any) {
-    console.error('TCGdex error:', error.message);
+    console.error('Database error:', error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
