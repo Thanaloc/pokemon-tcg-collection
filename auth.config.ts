@@ -13,7 +13,6 @@ export const authConfig: NextAuthConfig = {
           return null;
         }
 
-        // Import dynamique pour éviter Edge Runtime
         const { prisma } = await import('@/lib/prisma');
         const bcrypt = await import('bcryptjs');
 
@@ -49,12 +48,12 @@ export const authConfig: NextAuthConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isOnCollection = nextUrl.pathname.startsWith('/collection');
-      
+
       if (isOnCollection) {
         if (isLoggedIn) return true;
         return false;
       }
-      
+
       return true;
     },
     jwt({ token, user }) {

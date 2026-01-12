@@ -1,15 +1,34 @@
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import type { Card } from '@/types';
 import { RARITY_COLORS } from '@/constants/colors';
 import { AlertTriangle } from 'lucide-react';
+import { useCollection } from '@/hooks/useCollection';
 
 interface Props {
   card: Card;
   hasPriceWarning: boolean;
   collectionEnabled: boolean;
+  ownedQuantity?: number;
+  onCardAdded?: (cardId: string) => void;
 }
 
-export default function CardItem({ card, hasPriceWarning, collectionEnabled }: Props) {
+export default function CardItem({ card, hasPriceWarning, collectionEnabled, ownedQuantity = 0, onCardAdded }: Props) {
+  const router = useRouter();
+  const { addToCollection, isLoading, isAuthenticated } = useCollection();
+
+  const handleAddToCollection = async () => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    const success = await addToCollection(card.id);
+    if (success && onCardAdded) {
+      onCardAdded(card.id);
+    }
+  };
+
   return (
     <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-4 
                     hover:shadow-2xl hover:shadow-red-500/30 hover:scale-105 
@@ -17,13 +36,22 @@ export default function CardItem({ card, hasPriceWarning, collectionEnabled }: P
                     border border-red-500/20 hover:border-red-400/50 
                     relative group">
       
-      {/* Effet glow au hover */}
       <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
 
-      {/* Badge prix */}
+      {ownedQuantity > 0 && (
+        <div className="absolute top-2 left-2 z-10 
+                        bg-gradient-to-r from-green-500 to-emerald-600 
+                        text-white text-xs font-bold px-2.5 py-1.5 rounded-lg 
+                        flex items-center gap-1 shadow-lg">
+          ✓ {ownedQuantity}
+        </div>
+      )}
+
       {card.price != null && (
         <div className={`absolute top-2 right-2 z-10 
-                        ${hasPriceWarning ? 'bg-gradient-to-r from-orange-500 to-red-500' : 'bg-gradient-to-r from-green-500 to-emerald-600'} 
+                        ${hasPriceWarning
+                ? 'bg-gradient-to-r from-orange-500 to-red-500' 
+                : 'bg-gradient-to-r from-green-500 to-emerald-600'} 
                         text-white text-xs font-bold px-2.5 py-1.5 rounded-lg 
                         flex items-center gap-1 shadow-lg
                         hover:scale-110 transition-transform`}>
@@ -51,14 +79,12 @@ export default function CardItem({ card, hasPriceWarning, collectionEnabled }: P
         </div>
       </div>
 
-      {/* Warning prix */}
       {hasPriceWarning && card.price && (
         <div className="mt-2 bg-orange-500/10 border border-orange-500/20 rounded-lg p-2 text-xs text-orange-200 relative z-10">
-          ⚠️ Prix possiblement erroné (plusieurs versions)
+          ⚠️ Possibly incorrect price (multiple versions)
         </div>
       )}
 
-      {/* Boutons */}
       <div className="mt-3 space-y-2 relative z-10">
         {card.cardmarketUrl && (
           <a 
@@ -73,19 +99,20 @@ export default function CardItem({ card, hasPriceWarning, collectionEnabled }: P
                        transform hover:scale-105
                        transition-all duration-200"
           >
-            📊 Voir sur Cardmarket
+            📊 View on Cardmarket
           </a>
         )}
         
         <button 
-          disabled={!collectionEnabled} 
-          title={!collectionEnabled ? "Bientôt disponible" : ""} 
+          onClick={handleAddToCollection}
+          disabled={!collectionEnabled || isLoading} 
+          title={!collectionEnabled ? "Coming soon" : !isAuthenticated ? "Login to add to collection" : ""} 
           className={`w-full py-2.5 text-xs rounded-xl font-bold transition-all duration-200
-                     ${collectionEnabled 
+                     ${collectionEnabled && !isLoading
                        ? 'bg-slate-700 hover:bg-slate-600 text-white shadow-lg hover:shadow-xl hover:scale-105' 
                        : 'bg-slate-800/50 text-slate-500 cursor-not-allowed opacity-50 border border-slate-700/50'}`}
         >
-          ⭐ Ma collection
+          {isLoading ? '⏳ Adding...' : ownedQuantity > 0 ? '+ Add Another' : '⭐ Add to Collection'}
         </button>
       </div>
     </div>

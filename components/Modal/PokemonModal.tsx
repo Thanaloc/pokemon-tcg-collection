@@ -6,7 +6,7 @@ import CardGrid from './CardGrid';
 import { RARITY_ORDER } from '@/constants/rarityOrder';
 import { Filter, Grid3x3, X } from 'lucide-react';
 
-const COLLECTION_ENABLED = false;
+const COLLECTION_ENABLED = true;
 
 interface Props {
     pokemon: Pokemon | null;
@@ -19,6 +19,7 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
     const [sortBy, setSortBy] = useState<SortOption>('rarity');
     const [filterRarity, setFilterRarity] = useState<string>('all');
     const [filterSeries, setFilterSeries] = useState<string>('all');
+    const [ownedCards, setOwnedCards] = useState<Record<string, number>>({});
 
     useEffect(() => {
         if (pokemon) {
@@ -29,6 +30,30 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
             setSortBy('rarity');
         }
     }, [pokemon, load]);
+
+    useEffect(() => {
+        if (cards.length > 0) {
+            fetchOwnedCards();
+        }
+    }, [cards]);
+
+    const fetchOwnedCards = async () => {
+        try {
+            const cardIds = cards.map(c => c.id).join(',');
+            const response = await fetch(`/api/collection/check?cardIds=${cardIds}`);
+            const data = await response.json();
+            setOwnedCards(data.owned || {});
+        } catch (error) {
+            console.error('Error fetching owned cards:', error);
+        }
+    };
+
+    const updateOwnedCard = (cardId: string) => {
+        setOwnedCards(prev => ({
+            ...prev,
+            [cardId]: (prev[cardId] || 0) + 1
+        }));
+    };
 
     const uniqueRarities = useMemo(
         () => Array.from(new Set(cards.map(c => c.rarity))).filter(Boolean),
@@ -66,50 +91,45 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
     }, [cards]);
 
     const filteredSorted = useMemo(() => {
-        let list = [...cards];
+        let result = [...cards];
 
         if (cardSearchTerm.trim()) {
-            const s = cardSearchTerm.toLowerCase();
-            list = list.filter(c =>
-                c.set.toLowerCase().includes(s) ||
-                c.series.toLowerCase().includes(s)
+            const searchLower = cardSearchTerm.toLowerCase();
+            result = result.filter(c =>
+                c.set.toLowerCase().includes(searchLower) ||
+                c.series.toLowerCase().includes(searchLower) ||
+                c.name.toLowerCase().includes(searchLower)
             );
         }
+
         if (filterRarity !== 'all') {
-            list = list.filter(c => c.rarity === filterRarity);
+            result = result.filter(c => c.rarity === filterRarity);
         }
+
         if (filterSeries !== 'all') {
-            list = list.filter(c => c.series === filterSeries);
+            result = result.filter(c => c.series === filterSeries);
         }
 
-        list.sort((a, b) => {
-            switch (sortBy) {
-                case 'set':
-                    return a.set.localeCompare(b.set);
-                case 'rarity': {
-                    const scoreA = RARITY_ORDER.indexOf(a.rarity);
-                    const scoreB = RARITY_ORDER.indexOf(b.rarity);
-                    return scoreB - scoreA;
-                }
-                case 'number':
-                    return (parseInt(a.number) || 0) - (parseInt(b.number) || 0);
-                case 'price':
-                    return (b.price || 0) - (a.price || 0);
-                default:
-                    return 0;
-            }
-        });
+        if (sortBy === 'rarity') {
+            result.sort((a, b) => {
+                const indexA = RARITY_ORDER.indexOf(a.rarity);
+                const indexB = RARITY_ORDER.indexOf(b.rarity);
+                const rarityA = indexA === -1 ? 999 : indexA;
+                const rarityB = indexB === -1 ? 999 : indexB;
+                return rarityB - rarityA;
+            });
+        } else if (sortBy === 'price') {
+            result.sort((a, b) => {
+                const priceA = a.price ?? 0;
+                const priceB = b.price ?? 0;
+                return priceB - priceA;
+            });
+        } else if (sortBy === 'set') {
+            result.sort((a, b) => a.set.localeCompare(b.set));
+        }
 
-        return list;
-    }, [cards, cardSearchTerm, filterRarity, filterSeries, sortBy]);
-
-    useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-        };
-        window.addEventListener('keydown', handleEscape);
-        return () => window.removeEventListener('keydown', handleEscape);
-    }, [onClose]);
+        return result;
+    }, [cards, cardSearchTerm, sortBy, filterRarity, filterSeries]);
 
     if (!pokemon) return null;
 
@@ -160,7 +180,6 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                                 </div>
                             </div>
 
-                            {/* Bouton fermer */}
                             <button
                                 onClick={onClose}
                                 aria-label="Fermer la modal"
@@ -206,6 +225,8 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                                         cards={filteredSorted}
                                         cardsWithMultipleRarities={cardsWithMultipleRarities}
                                         collectionEnabled={COLLECTION_ENABLED}
+                                        ownedCards={ownedCards}
+                                        onCardAdded={updateOwnedCard}
                                     />
                                 </div>
                             ) : (
@@ -227,7 +248,7 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                                transform hover:scale-105
                                transition-all duration-200"
                                     >
-                                        ðŸ”„ RÃ©initialiser les filtres
+                                        🔄 Réinitialiser les filtres
                                     </button>
                                 </div>
                             )}
@@ -240,7 +261,7 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                     ) : (
                         <div className="text-center py-16">
                             <Grid3x3 size={48} className="mx-auto text-red-500/40 mb-4" />
-                            <p className="text-red-200">Aucune carte trouvÃ©e pour ce PokÃ©mon</p>
+                            <p className="text-red-200">Aucune carte trouvée pour ce Pokémon</p>
                         </div>
                     )}
                 </div>
