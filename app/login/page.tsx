@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, ArrowLeft, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get('registered');
@@ -19,14 +19,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(!!registered || !!verified);
 
-  // Clear URL params after showing message
   useEffect(() => {
     if (registered || verified) {
       const timer = setTimeout(() => {
         setShowSuccess(false);
-        // Clean URL without reloading
         window.history.replaceState({}, '', '/login');
-      }, 5000); // Hide after 5 seconds
+      }, 5000);
       
       return () => clearTimeout(timer);
     }
@@ -45,24 +43,6 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        // Check if it's an email verification error
-        if (result.error === 'CredentialsSignin') {
-          // Try to get more context - check if user exists but not verified
-          const checkResponse = await fetch('/api/auth/check-verification', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email }),
-          });
-          
-          if (checkResponse.ok) {
-            const data = await checkResponse.json();
-            if (data.exists && !data.verified) {
-              setError('Veuillez vérifier votre email avant de vous connecter. Consultez votre boîte mail.');
-              return;
-            }
-          }
-        }
-        
         setError('Email ou mot de passe incorrect');
       } else {
         router.push('/');
@@ -111,7 +91,7 @@ export default function LoginPage() {
             <p className="text-slate-400 text-sm">Accédez à votre collection Pokémon</p>
           </div>
 
-          {/* Success message after registration or verification */}
+          {/* Success message */}
           {showSuccess && (registered || verified) && (
             <div className="mb-6 bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex items-start gap-3">
               <CheckCircle size={20} className="text-green-400 flex-shrink-0 mt-0.5" />
@@ -125,7 +105,6 @@ export default function LoginPage() {
               <button
                 onClick={() => setShowSuccess(false)}
                 className="text-green-400 hover:text-green-300 transition-colors"
-                aria-label="Fermer"
               >
                 ✕
               </button>
@@ -187,7 +166,6 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
-                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -245,5 +223,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-950 to-slate-900 flex items-center justify-center">
+        <div className="text-white">Chargement...</div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
