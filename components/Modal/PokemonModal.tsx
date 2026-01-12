@@ -16,7 +16,7 @@ interface Props {
 export default function PokemonModal({ pokemon, onClose }: Props) {
     const { cards, load, isLoading } = usePokemonCards();
     const [cardSearchTerm, setCardSearchTerm] = useState('');
-    const [sortBy, setSortBy] = useState<SortOption>('set');
+    const [sortBy, setSortBy] = useState<SortOption>('rarity');
     const [filterRarity, setFilterRarity] = useState<string>('all');
     const [filterSeries, setFilterSeries] = useState<string>('all');
 
@@ -26,7 +26,7 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
             setCardSearchTerm('');
             setFilterRarity('all');
             setFilterSeries('all');
-            setSortBy('set');
+            setSortBy('rarity');
         }
     }, [pokemon, load]);
 
@@ -89,7 +89,7 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                 case 'rarity': {
                     const scoreA = RARITY_ORDER.indexOf(a.rarity);
                     const scoreB = RARITY_ORDER.indexOf(b.rarity);
-                    return scoreA - scoreB;
+                    return scoreB - scoreA;
                 }
                 case 'number':
                     return (parseInt(a.number) || 0) - (parseInt(b.number) || 0);
@@ -196,7 +196,7 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                                     setCardSearchTerm('');
                                     setFilterRarity('all');
                                     setFilterSeries('all');
-                                    setSortBy('set');
+                                    setSortBy('rarity');
                                 }}
                             />
 
@@ -217,7 +217,7 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                                             setCardSearchTerm('');
                                             setFilterRarity('all');
                                             setFilterSeries('all');
-                                            setSortBy('set');
+                                            setSortBy('rarity');
                                         }}
                                         className="mt-6 px-6 py-3 
                                bg-gradient-to-r from-red-600 to-orange-600 
@@ -227,7 +227,7 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                                transform hover:scale-105
                                transition-all duration-200"
                                     >
-                                        🔄 Réinitialiser les filtres
+                                        ðŸ”„ RÃ©initialiser les filtres
                                     </button>
                                 </div>
                             )}
@@ -240,7 +240,7 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                     ) : (
                         <div className="text-center py-16">
                             <Grid3x3 size={48} className="mx-auto text-red-500/40 mb-4" />
-                            <p className="text-red-200">Aucune carte trouvée pour ce Pokémon</p>
+                            <p className="text-red-200">Aucune carte trouvÃ©e pour ce PokÃ©mon</p>
                         </div>
                     )}
                 </div>
