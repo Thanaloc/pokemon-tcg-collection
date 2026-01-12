@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import type { Pokemon } from '@/types';
 import { fetchJson } from '@/utils/fetcher';
+import { useDebounce } from './useDebounce';
 
 export function usePokemonData() {
   const [allPokemon, setAllPokemon] = useState<Pokemon[]>([]);
@@ -10,6 +11,7 @@ export function usePokemonData() {
   const [error, setError] = useState<string | null>(null);
 
   const cacheRef = useRef<Pokemon[] | null>(null);
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     let mounted = true;
@@ -47,15 +49,15 @@ export function usePokemonData() {
   }, []);
 
   useEffect(() => {
-    if (!searchTerm.trim()) {
+    if (!debouncedSearchTerm.trim()) {
       setFilteredPokemon(allPokemon);
       return;
     }
-    const s = searchTerm.toLowerCase();
+    const s = debouncedSearchTerm.toLowerCase();
     setFilteredPokemon(allPokemon.filter(p =>
       p.name.toLowerCase().includes(s) || p.number.includes(s)
     ));
-  }, [searchTerm, allPokemon]);
+  }, [debouncedSearchTerm, allPokemon]);
 
   return {
     allPokemon,

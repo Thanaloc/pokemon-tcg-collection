@@ -1,36 +1,36 @@
 import { useCallback, useRef, useState } from 'react';
 import type { Card } from '@/types';
 import { fetchJson } from '@/utils/fetcher';
+import { requestDeduplicator } from '../utils/requestDuplicator';
 
 export function usePokemonCards() {
   const cacheRef = useRef<Map<string, Card[]>>(new Map());
-  
-  const loadingRef = useRef<Set<string>>(new Set());
   
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async (pokemonName: string) => {
-    
-    if (loadingRef.current.has(pokemonName)) {
-      return cacheRef.current.get(pokemonName) || [];
-    }
-
     setError(null);
     setIsLoading(true);
-    loadingRef.current.add(pokemonName);
 
     try {
-      // Check cache
+      // Check cache first
       if (cacheRef.current.has(pokemonName)) {
         const cached = cacheRef.current.get(pokemonName)!;
         setCards(cached);
+        setIsLoading(false);
         return cached;
       }
 
-      const url = `/api/cards?pokemon=${encodeURIComponent(pokemonName)}`;
-      const data = await fetchJson(url);
+      // Deduplicate concurrent requests for same Pokemon
+      const data = await requestDeduplicator.dedupe(
+        `pokemon-cards-${pokemonName}`,
+        async () => {
+          const url = `/api/cards?pokemon=${encodeURIComponent(pokemonName)}`;
+          return fetchJson(url);
+        }
+      );
       
       if (!Array.isArray(data)) {
         setCards([]);
@@ -46,7 +46,6 @@ export function usePokemonCards() {
       setCards([]);
       return [];
     } finally {
-      loadingRef.current.delete(pokemonName);
       setIsLoading(false);
     }
   }, []);
@@ -58,7 +57,7 @@ export function usePokemonCards() {
     error, 
     clearCache: () => {
       cacheRef.current.clear();
-      loadingRef.current.clear();
+      requestDeduplicator.clear();
     }
   };
 }
