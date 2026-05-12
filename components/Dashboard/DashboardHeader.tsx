@@ -5,14 +5,13 @@ import UserMenu from '@/components/Header/UserMenu';
 interface Props {
   userName: string;
   userEmail: string;
-  totalCards: number;
-  totalValue: number;
+  pinnedCount: number;
 }
 
-export default function CollectionHeader({ userName, userEmail, totalCards, totalValue }: Props) {
+export default function DashboardHeader({ userName, userEmail, pinnedCount }: Props) {
   return (
     <header className="sticky top-0 z-40 px-6 py-8 border-b border-red-500/20 bg-gradient-to-r from-slate-900/95 via-red-900/40 to-slate-900/95 backdrop-blur-xl shadow-2xl">
-      
+
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 opacity-[0.12]" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 0l34.64 20v40L40 80 5.36 60V20z' fill='none' stroke='%23ef4444' stroke-width='1.5'/%3E%3C/svg%3E")`,
@@ -25,9 +24,9 @@ export default function CollectionHeader({ userName, userEmail, totalCards, tota
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="flex items-center justify-between gap-6 mb-6">
+        <div className="flex items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            
+
             <Link href="/" className="relative w-14 h-14 flex-shrink-0">
               <div className="absolute inset-0 animate-spin rounded-full bg-gradient-to-r from-red-500 via-white to-red-500 opacity-80"></div>
               <div className="absolute inset-1 rounded-full bg-slate-900 flex items-center justify-center">
@@ -38,40 +37,35 @@ export default function CollectionHeader({ userName, userEmail, totalCards, tota
             </Link>
 
             <div>
-              <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-red-500 to-orange-400 drop-shadow-lg">
-                Ma Collection
+              <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-400 drop-shadow-lg flex items-center gap-3">
+                <TrendingUp className="w-8 h-8 text-amber-400" />
+                Dashboard
               </h1>
               <p className="text-sm text-red-200/80 mt-1 font-medium">
-                <strong className="text-white">{totalCards}</strong> cartes • <strong className="text-white">{totalValue.toFixed(2)}€</strong>
+                Évolution des prix de tes <strong className="text-white">{pinnedCount}</strong> carte{pinnedCount > 1 ? 's' : ''} épinglée{pinnedCount > 1 ? 's' : ''}
               </p>
             </div>
           </div>
 
-                    <div className="flex items-center gap-4">
-            <div className="flex gap-4 items-center">
-              <div className="bg-gradient-to-br from-red-500/10 to-orange-500/10 px-6 py-3 rounded-2xl border border-red-400/20">
-                <p className="text-xs text-red-300 font-medium uppercase tracking-wide">Cartes</p>
-                <p className="text-2xl font-extrabold text-white">{totalCards}</p>
-              </div>
-              <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 px-6 py-3 rounded-2xl border border-orange-400/20">
-                <p className="text-xs text-orange-300 font-medium uppercase tracking-wide">Valeur</p>
-                <p className="text-2xl font-extrabold text-white">{totalValue.toFixed(2)}€</p>
-              </div>
-            </div>
-
+          <div className="flex items-center gap-4">
             <Link
-              href="/dashboard"
+              href="/collection"
               className="group relative px-5 py-2.5
                        bg-slate-800/90 hover:bg-slate-700/90
                        rounded-xl font-bold text-white
-                       border-2 border-amber-500/40 hover:border-amber-400/60
-                       shadow-lg hover:shadow-xl hover:shadow-amber-500/40
+                       border-2 border-red-500/40 hover:border-red-400/60
+                       shadow-lg hover:shadow-xl hover:shadow-red-500/40
                        transition-all duration-200
                        transform hover:scale-105
                        flex items-center gap-3"
             >
-              <TrendingUp className="w-5 h-5 text-amber-400 group-hover:text-amber-300 transition-colors" />
-              <span>Dashboard</span>
+              <div className="relative w-5 h-5 flex-shrink-0 group-hover:rotate-180 transition-transform duration-500">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-b from-red-500 to-red-600"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-1/2 rounded-b-full bg-white"></div>
+                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-900 transform -translate-y-1/2"></div>
+                <div className="absolute top-1/2 left-1/2 w-2 h-2 rounded-full border border-slate-900 bg-white transform -translate-x-1/2 -translate-y-1/2"></div>
+              </div>
+              <span>Ma Collection</span>
             </Link>
 
             <UserMenu user={{ name: userName, email: userEmail }} />

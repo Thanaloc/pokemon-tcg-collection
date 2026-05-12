@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import DashboardClient from './DashboardClient';
+import DashboardHeader from '@/components/Dashboard/DashboardHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,13 +44,14 @@ export default async function DashboardPage() {
     },
   }));
 
-  return (
+   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-950 to-slate-900">
+      <DashboardHeader
+        userName={session.user.name || ''}
+        userEmail={session.user.email || ''}
+        pinnedCount={formattedPins.length}
+      />
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-black text-white mb-2">Dashboard</h1>
-        <p className="text-red-200/80 mb-8">
-          Suis l&apos;évolution des prix de tes cartes épinglées.
-        </p>
         <DashboardClient initialPins={formattedPins} />
       </main>
     </div>
