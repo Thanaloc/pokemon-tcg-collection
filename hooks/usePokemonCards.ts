@@ -5,25 +5,28 @@ import { requestDeduplicator } from '../utils/requestDuplicator';
 
 export function usePokemonCards() {
   const cacheRef = useRef<Map<string, Card[]>>(new Map());
-  
+  const latestRequestRef = useRef<string | null>(null);
+
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async (pokemonName: string) => {
+    latestRequestRef.current = pokemonName;
+    const isStillCurrent = () => latestRequestRef.current === pokemonName;
+
     setError(null);
     setIsLoading(true);
 
     try {
-      // Check cache first
       if (cacheRef.current.has(pokemonName)) {
         const cached = cacheRef.current.get(pokemonName)!;
-        setCards(cached);
-        setIsLoading(false);
+        if (isStillCurrent()) {
+          setCards(cached);
+        }
         return cached;
       }
 
-      // Deduplicate concurrent requests for same Pokemon
       const data = await requestDeduplicator.dedupe(
         `pokemon-cards-${pokemonName}`,
         async () => {
@@ -31,33 +34,35 @@ export function usePokemonCards() {
           return fetchJson(url);
         }
       );
-      
-      if (!Array.isArray(data)) {
-        setCards([]);
-        cacheRef.current.set(pokemonName, []);
-        return [];
-      }
 
-      cacheRef.current.set(pokemonName, data);
-      setCards(data);
-      return data;
+      const normalized = Array.isArray(data) ? data : [];
+      cacheRef.current.set(pokemonName, normalized);
+
+      if (isStillCurrent()) {
+        setCards(normalized);
+      }
+      return normalized;
     } catch (err: any) {
-      setError(err.message || 'Erreur lors du chargement des cartes');
-      setCards([]);
+      if (isStillCurrent()) {
+        setError(err.message || 'Erreur lors du chargement des cartes');
+        setCards([]);
+      }
       return [];
     } finally {
-      setIsLoading(false);
+      if (isStillCurrent()) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
-  return { 
-    cards, 
-    load, 
-    isLoading, 
-    error, 
+  return {
+    cards,
+    load,
+    isLoading,
+    error,
     clearCache: () => {
       cacheRef.current.clear();
       requestDeduplicator.clear();
-    }
+    },
   };
 }

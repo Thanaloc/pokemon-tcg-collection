@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   try {
     const session = await auth();
 
@@ -10,8 +10,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ owned: {} });
     }
 
-    const { searchParams } = new URL(request.url);
-    const cardIds = searchParams.get('cardIds')?.split(',') || [];
+    const body = await request.json().catch(() => null);
+    const cardIds: string[] = Array.isArray(body?.cardIds)
+      ? body.cardIds.filter((id: unknown): id is string => typeof id === 'string')
+      : [];
 
     if (cardIds.length === 0) {
       return NextResponse.json({ owned: {} });
@@ -29,12 +31,12 @@ export async function GET(request: Request) {
     });
 
     const owned: Record<string, number> = {};
-    collections.forEach((item: any) => {
+    for (const item of collections) {
       owned[item.cardId] = item.quantity;
-    });
+    }
 
     return NextResponse.json({ owned });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error checking ownership:', error);
     return NextResponse.json({ owned: {} });
   }

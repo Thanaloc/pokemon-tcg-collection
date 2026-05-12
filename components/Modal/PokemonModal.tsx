@@ -39,8 +39,12 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
 
     const fetchOwnedCards = async () => {
         try {
-            const cardIds = cards.map(c => c.id).join(',');
-            const response = await fetch(`/api/collection/check?cardIds=${cardIds}`);
+            const cardIds = cards.map(c => c.id);
+            const response = await fetch('/api/collection/check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cardIds }),
+            });
             const data = await response.json();
             setOwnedCards(data.owned || {});
         } catch (error) {
@@ -110,13 +114,12 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
             result = result.filter(c => c.series === filterSeries);
         }
 
-        if (sortBy === 'rarity') {
+                if (sortBy === 'rarity') {
+            const rarityIndex = new Map(RARITY_ORDER.map((r, i) => [r, i]));
             result.sort((a, b) => {
-                const indexA = RARITY_ORDER.indexOf(a.rarity);
-                const indexB = RARITY_ORDER.indexOf(b.rarity);
-                const rarityA = indexA === -1 ? 999 : indexA;
-                const rarityB = indexB === -1 ? 999 : indexB;
-                return rarityB - rarityA;
+                const indexA = rarityIndex.get(a.rarity) ?? 999;
+                const indexB = rarityIndex.get(b.rarity) ?? 999;
+                return indexB - indexA;
             });
         } else if (sortBy === 'price') {
             result.sort((a, b) => {
@@ -126,6 +129,20 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
             });
         } else if (sortBy === 'set') {
             result.sort((a, b) => a.set.localeCompare(b.set));
+        } else if (sortBy === 'number') {
+            // Card numbers can be "001", "TG01", "SV01", "RC02"... Sort numerically
+            // when both sides are pure integers, otherwise fall back to natural
+            // string compare so codes group together.
+            result.sort((a, b) => {
+                const numA = parseInt(a.number, 10);
+                const numB = parseInt(b.number, 10);
+                const aIsNum = !Number.isNaN(numA) && /^\d+$/.test(a.number);
+                const bIsNum = !Number.isNaN(numB) && /^\d+$/.test(b.number);
+                if (aIsNum && bIsNum) return numA - numB;
+                if (aIsNum) return -1;
+                if (bIsNum) return 1;
+                return a.number.localeCompare(b.number, undefined, { numeric: true });
+            });
         }
 
         return result;

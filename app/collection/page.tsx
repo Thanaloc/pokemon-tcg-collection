@@ -51,19 +51,16 @@ export default function CollectionPage() {
     loadCollection();
   }, [session, page]);
 
-  const loadCollection = async () => {
+   const loadCollection = async () => {
     const data = await fetchCollection(page, 50);
-    if (data) {
-      setCollections(data.collections);
-      setTotalPages(data.totalPages);
-      setStats({
-        total: data.total,
-        totalValue: stats.totalValue,
-      });
-      
-      if (page === 1 || stats.totalValue === 0) {
-        calculateTotalValue();
-      }
+    if (!data) return;
+
+    setCollections(data.collections);
+    setTotalPages(data.totalPages);
+    setStats(prev => ({ ...prev, total: data.total }));
+
+    if (page === 1) {
+      calculateTotalValue();
     }
   };
 

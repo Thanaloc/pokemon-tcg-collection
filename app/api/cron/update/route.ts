@@ -65,8 +65,11 @@ export async function GET(request: Request) {
     });
     const existingCardIds = new Set(existingCards.map((c: any) => c.id));
 
-    // Process only first 5 sets for testing (remove this limit in production)
-    const setsToProcess = setsData.slice(0, 5);
+    const setsToProcess = [...setsData].sort((a, b) => {
+      const dateA = new Date(a.releaseDate || '2000-01-01').getTime();
+      const dateB = new Date(b.releaseDate || '2000-01-01').getTime();
+      return dateB - dateA;
+    });
 
     for (const set of setsToProcess) {
       if (/^[AB]\d/.test(set.id)) continue;
