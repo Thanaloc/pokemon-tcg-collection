@@ -8,25 +8,34 @@ interface Props {
   collectionEnabled: boolean;
   ownedCards?: Record<string, number>;
   onCardAdded?: (cardId: string) => void;
+  pinnedCardIds: Set<string>;
+  pinLoadingIds: Set<string>;
+  onTogglePin: (cardId: string) => void;
 }
 
-export default function CardGrid({ 
-  cards, 
-  cardsWithMultipleRarities, 
+export default function CardGrid({
+  cards,
+  cardsWithMultipleRarities,
   collectionEnabled,
   ownedCards = {},
-  onCardAdded
+  onCardAdded,
+  pinnedCardIds,
+  pinLoadingIds,
+  onTogglePin,
 }: Props) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
       {cards.map(card => (
-        <CardItem 
-          key={card.id} 
-          card={card} 
-          hasPriceWarning={cardsWithMultipleRarities.has(card.id)} 
+        <CardItem
+          key={card.id}
+          card={card}
+          hasPriceWarning={cardsWithMultipleRarities.has(card.id)}
           collectionEnabled={collectionEnabled}
           ownedQuantity={ownedCards[card.id] || 0}
           onCardAdded={onCardAdded}
+          isPinned={pinnedCardIds.has(card.id)}
+          isPinLoading={pinLoadingIds.has(card.id)}
+          onTogglePin={onTogglePin}
         />
       ))}
     </div>

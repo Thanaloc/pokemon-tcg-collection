@@ -20,6 +20,8 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
     const [filterRarity, setFilterRarity] = useState<string>('all');
     const [filterSeries, setFilterSeries] = useState<string>('all');
     const [ownedCards, setOwnedCards] = useState<Record<string, number>>({});
+    const [pinnedCardIds, setPinnedCardIds] = useState<Set<string>>(new Set());
+    const [pinLoadingIds, setPinLoadingIds] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         if (pokemon) {
@@ -31,9 +33,10 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
         }
     }, [pokemon, load]);
 
-    useEffect(() => {
+        useEffect(() => {
         if (cards.length > 0) {
             fetchOwnedCards();
+            fetchPinnedCards();
         }
     }, [cards]);
 
@@ -49,6 +52,60 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
             setOwnedCards(data.owned || {});
         } catch (error) {
             console.error('Error fetching owned cards:', error);
+        }
+    };
+
+        const fetchPinnedCards = async () => {
+        try {
+            const response = await fetch('/api/dashboard/pins');
+            if (!response.ok) return;
+            const data = await response.json();
+            const ids = new Set<string>((data.pins || []).map((p: any) => p.card.id));
+            setPinnedCardIds(ids);
+        } catch (error) {
+            console.error('Error fetching pinned cards:', error);
+        }
+    };
+
+    const togglePin = async (cardId: string) => {
+        const wasPinned = pinnedCardIds.has(cardId);
+
+        // Optimistic update
+        setPinnedCardIds(prev => {
+            const next = new Set(prev);
+            if (wasPinned) next.delete(cardId);
+            else next.add(cardId);
+            return next;
+        });
+        setPinLoadingIds(prev => new Set(prev).add(cardId));
+
+        try {
+            const response = wasPinned
+                ? await fetch(`/api/dashboard/pins?cardId=${encodeURIComponent(cardId)}`, {
+                    method: 'DELETE',
+                })
+                : await fetch('/api/dashboard/pins', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cardId }),
+                });
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        } catch (error) {
+            console.error('Error toggling pin:', error);
+            // Rollback
+            setPinnedCardIds(prev => {
+                const next = new Set(prev);
+                if (wasPinned) next.add(cardId);
+                else next.delete(cardId);
+                return next;
+            });
+        } finally {
+            setPinLoadingIds(prev => {
+                const next = new Set(prev);
+                next.delete(cardId);
+                return next;
+            });
         }
     };
 
@@ -244,6 +301,9 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                                         collectionEnabled={COLLECTION_ENABLED}
                                         ownedCards={ownedCards}
                                         onCardAdded={updateOwnedCard}
+                                        pinnedCardIds={pinnedCardIds}
+                                        pinLoadingIds={pinLoadingIds}
+                                        onTogglePin={togglePin}
                                     />
                                 </div>
                             ) : (

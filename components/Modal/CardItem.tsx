@@ -2,7 +2,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import type { Card } from '@/types';
 import { RARITY_COLORS } from '@/constants/colors';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Pin, PinOff } from 'lucide-react';
 import { useCollection } from '@/hooks/useCollection';
 
 interface Props {
@@ -11,9 +11,21 @@ interface Props {
   collectionEnabled: boolean;
   ownedQuantity?: number;
   onCardAdded?: (cardId: string) => void;
+  isPinned: boolean;
+  onTogglePin: (cardId: string) => void;
+  isPinLoading?: boolean;
 }
 
-export default function CardItem({ card, hasPriceWarning, collectionEnabled, ownedQuantity = 0, onCardAdded }: Props) {
+export default function CardItem({
+  card,
+  hasPriceWarning,
+  collectionEnabled,
+  ownedQuantity = 0,
+  onCardAdded,
+  isPinned,
+  onTogglePin,
+  isPinLoading = false,
+}: Props) {
   const router = useRouter();
   const { addToCollection, isLoading, isAuthenticated } = useCollection();
 
@@ -27,6 +39,14 @@ export default function CardItem({ card, hasPriceWarning, collectionEnabled, own
     if (success && onCardAdded) {
       onCardAdded(card.id);
     }
+  };
+
+    const handleTogglePin = () => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+    onTogglePin(card.id);
   };
 
   return (
@@ -103,7 +123,7 @@ export default function CardItem({ card, hasPriceWarning, collectionEnabled, own
           </a>
         )}
         
-        <button 
+                <button 
           onClick={handleAddToCollection}
           disabled={!collectionEnabled || isLoading} 
           title={!collectionEnabled ? "Coming soon" : !isAuthenticated ? "Login to add to collection" : ""} 
@@ -113,6 +133,30 @@ export default function CardItem({ card, hasPriceWarning, collectionEnabled, own
                        : 'bg-slate-800/50 text-slate-500 cursor-not-allowed opacity-50 border border-slate-700/50'}`}
         >
           {isLoading ? '⏳ Adding...' : ownedQuantity > 0 ? '+ Add Another' : '⭐ Add to Collection'}
+        </button>
+
+        <button
+          onClick={handleTogglePin}
+          disabled={isPinLoading}
+          title={!isAuthenticated ? "Login to pin" : isPinned ? "Retirer du dashboard" : "Suivre le prix sur le dashboard"}
+          className={`w-full py-2.5 text-xs rounded-xl font-bold transition-all duration-200
+                     flex items-center justify-center gap-2
+                     ${isPinned
+                       ? 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white shadow-lg hover:shadow-xl hover:scale-105'
+                       : 'bg-slate-700 hover:bg-slate-600 text-white shadow-lg hover:shadow-xl hover:scale-105'}
+                     ${isPinLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+        >
+          {isPinLoading ? (
+            <>⏳ ...</>
+          ) : isPinned ? (
+            <>
+              <PinOff size={14} /> Ne plus suivre
+            </>
+          ) : (
+            <>
+              <Pin size={14} /> Suivre le prix
+            </>
+          )}
         </button>
       </div>
     </div>
