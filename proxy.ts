@@ -1,10 +1,13 @@
 import { auth } from '@/auth';
 
+const PROTECTED_PREFIXES = ['/collection', '/dashboard'];
+
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
-  const isOnCollection = req.nextUrl.pathname.startsWith('/collection');
+  const path = req.nextUrl.pathname;
+  const isProtected = PROTECTED_PREFIXES.some(prefix => path.startsWith(prefix));
 
-  if (isOnCollection && !isLoggedIn) {
+  if (isProtected && !isLoggedIn) {
     return Response.redirect(new URL('/login', req.url));
   }
 });

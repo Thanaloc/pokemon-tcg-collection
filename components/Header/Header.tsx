@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { TrendingUp } from 'lucide-react';
 import SearchBar from './SearchBar';
 import Stats from './Stats';
 import UserMenu from './UserMenu';
@@ -57,6 +58,22 @@ export default function Header({ searchTerm, setSearchTerm, pokemonCount, isLoad
             
             {session?.user ? (
               <div className="flex items-center gap-3">
+                {/* Ma Collection Button - Option 2 with mini Pokeball */}
+                                <Link
+                  href="/dashboard"
+                  className="group relative px-5 py-2.5
+                           bg-slate-800/90 hover:bg-slate-700/90
+                           rounded-xl font-bold text-white
+                           border-2 border-amber-500/40 hover:border-amber-400/60
+                           shadow-lg hover:shadow-xl hover:shadow-amber-500/40
+                           transition-all duration-200
+                           transform hover:scale-105
+                           flex items-center gap-3"
+                >
+                  <TrendingUp className="w-5 h-5 text-amber-400 group-hover:text-amber-300 transition-colors" />
+                  <span>Dashboard</span>
+                </Link>
+
                 {/* Ma Collection Button - Option 2 with mini Pokeball */}
                 <Link 
                   href="/collection" 
