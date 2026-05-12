@@ -7,11 +7,11 @@ datasource db {
 }
 
 model Pokemon {
-  id      Int     @id
-  nameFr  String  @map("name_fr")
-  nameEn  String  @map("name_en")
-  cards   Card[]
-  
+  id     Int    @id
+  nameFr String @map("name_fr")
+  nameEn String @map("name_en")
+  cards  Card[]
+
   @@map("pokemon")
 }
 
@@ -21,28 +21,32 @@ model Set {
   series      String
   releaseDate DateTime @map("release_date")
   cards       Card[]
-  
+
   @@map("sets")
 }
 
 model Card {
-  id          String   @id
-  pokemonId   Int      @map("pokemon_id")
-  setId       String   @map("set_id")
-  number      String
-  name        String
-  rarity      String
-  imageFr     String?  @map("image_fr")
-  imageEn     String?  @map("image_en")
-  imageSmallFr String? @map("image_small_fr")
-  imageSmallEn String? @map("image_small_en")
-  createdAt   DateTime @default(now()) @map("created_at")
-  
-  pokemon     Pokemon  @relation(fields: [pokemonId], references: [id])
-  set         Set      @relation(fields: [setId], references: [id])
-  price       Price?
+  id           String   @id
+  pokemonId    Int      @map("pokemon_id")
+  setId        String   @map("set_id")
+  number       String
+  name         String
+  rarity       String
+  imageFr      String?  @map("image_fr")
+  imageEn      String?  @map("image_en")
+  imageSmallFr String?  @map("image_small_fr")
+  imageSmallEn String?  @map("image_small_en")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  pokemon         Pokemon          @relation(fields: [pokemonId], references: [id])
+  set             Set              @relation(fields: [setId], references: [id])
+  price           Price?
   userCollections UserCollection[]
-  
+  priceHistory    PriceHistory[]
+  pinnedBy        PinnedCard[]
+
+  @@index([pokemonId])
+  @@index([setId])
   @@map("cards")
 }
 
@@ -52,9 +56,9 @@ model Price {
   tcgplayerPrice  Float?   @map("tcgplayer_price")
   cardmarketPrice Float?   @map("cardmarket_price")
   updatedAt       DateTime @updatedAt @map("updated_at")
-  
-  card            Card     @relation(fields: [cardId], references: [id])
-  
+
+  card Card @relation(fields: [cardId], references: [id])
+
   @@map("prices")
 }
 
@@ -66,11 +70,12 @@ model User {
   emailVerified DateTime? @map("email_verified")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
-  
-  collections   UserCollection[]
-  verificationTokens VerificationToken[]
+
+  collections         UserCollection[]
+  verificationTokens  VerificationToken[]
   passwordResetTokens PasswordResetToken[]
-  
+  pinnedCards         PinnedCard[]
+
   @@map("users")
 }
 
@@ -80,9 +85,9 @@ model VerificationToken {
   email     String
   expires   DateTime
   createdAt DateTime @default(now()) @map("created_at")
-  
-  user      User?    @relation(fields: [email], references: [email], onDelete: Cascade)
-  
+
+  user User? @relation(fields: [email], references: [email], onDelete: Cascade)
+
   @@unique([email, token])
   @@index([email])
   @@map("verification_tokens")
@@ -94,23 +99,57 @@ model PasswordResetToken {
   email     String
   expires   DateTime
   createdAt DateTime @default(now()) @map("created_at")
-  
-  user      User?    @relation(fields: [email], references: [email], onDelete: Cascade)
-  
+
+  user User? @relation(fields: [email], references: [email], onDelete: Cascade)
+
   @@index([email])
   @@map("password_reset_tokens")
 }
 
 model UserCollection {
-  id        Int      @id @default(autoincrement())
-  userId    String   @map("user_id")
-  cardId    String   @map("card_id")
-  quantity  Int      @default(1)
-  addedAt   DateTime @default(now()) @map("added_at")
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  card      Card     @relation(fields: [cardId], references: [id])
-  
+  id       Int      @id @default(autoincrement())
+  userId   String   @map("user_id")
+  cardId   String   @map("card_id")
+  quantity Int      @default(1)
+  addedAt  DateTime @default(now()) @map("added_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card Card @relation(fields: [cardId], references: [id])
+
   @@unique([userId, cardId])
   @@map("user_collections")
+}
+
+enum PriceConfidence {
+  HIGH
+  LOW
+
+  @@map("price_confidence")
+}
+
+model PriceHistory {
+  id              Int             @id @default(autoincrement())
+  cardId          String          @map("card_id")
+  snapshotAt      DateTime        @default(now()) @map("snapshot_at")
+  cardmarketPrice Float           @map("cardmarket_price")
+  confidence      PriceConfidence @default(HIGH)
+
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId, snapshotAt])
+  @@map("price_history")
+}
+
+model PinnedCard {
+  id       Int      @id @default(autoincrement())
+  userId   String   @map("user_id")
+  cardId   String   @map("card_id")
+  pinnedAt DateTime @default(now()) @map("pinned_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cardId])
+  @@index([userId])
+  @@map("pinned_cards")
 }
