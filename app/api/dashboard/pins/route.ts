@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { buildCardmarketUrl } from '@/lib/cardmarket';
 
 export async function GET() {
   try {
@@ -23,25 +24,22 @@ export async function GET() {
       orderBy: { pinnedAt: 'desc' },
     });
 
-    const formatted = pins.map((p: any) => ({
-      id: p.id,
-      pinnedAt: p.pinnedAt,
-      card: {
-        id: p.card.id,
+      const formatted = pins.map((p: any) => ({
+    id: p.id,
+    pinnedAt: p.pinnedAt,
+    card: {
+      id: p.card.id,
+      name: p.card.name,
+      number: p.card.number,
+      set: p.card.set.name,
+      smallImage: p.card.imageSmallFr || p.card.imageSmallEn,
+      currentPrice: p.card.price?.cardmarketPrice || null,
+      cardmarketUrl: buildCardmarketUrl({
         name: p.card.name,
         number: p.card.number,
-        rarity: p.card.rarity,
-        image: p.card.imageFr || p.card.imageEn || 'placeholder-card.png',
-        smallImage: p.card.imageSmallFr || p.card.imageSmallEn || 'placeholder-card.png',
-        set: p.card.set.name,
-        series: p.card.set.series,
-        currentPrice: p.card.price?.cardmarketPrice || null,
-        pokemon: {
-          id: p.card.pokemon.id,
-          name: p.card.pokemon.nameFr,
-        },
-      },
-    }));
+      }),
+    },
+  }));
 
     return NextResponse.json({ pins: formatted });
   } catch (error) {

@@ -1,5 +1,6 @@
 ﻿import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { buildCardmarketUrl } from '@/lib/cardmarket';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -49,11 +50,11 @@ export async function GET(request: Request) {
       ],
     });
 
-    // Format cards for frontend
-    const formattedCards = cards.map((card: any) => {
-  const cardmarketUrl = `https://www.google.com/search?q=${encodeURIComponent(
-    `${card.name} ${card.number} ${card.set.name} cardmarket`
-  )}`;
+        const formattedCards = cards.map((card: any) => {
+          const cardmarketUrl = buildCardmarketUrl({
+        name: card.name,
+        number: card.number,
+      });
 
   return {
     id: card.id,

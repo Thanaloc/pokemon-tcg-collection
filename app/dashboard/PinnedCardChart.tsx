@@ -10,7 +10,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { X, AlertTriangle } from 'lucide-react';
+import { X, AlertTriangle, ExternalLink } from 'lucide-react';
+import { buildCardmarketUrl } from '@/lib/cardmarket';
 
 type HistoryPoint = {
   snapshotAt: string;
@@ -28,6 +29,7 @@ interface Props {
       set: string;
       smallImage: string;
       currentPrice: number | null;
+      cardmarketUrl: string;
     };
   };
   range: '7d' | '30d' | '90d' | 'all';
@@ -75,28 +77,39 @@ export default function PinnedCardChart({ pin, range, onUnpin }: Props) {
   return (
     <div className="bg-slate-800/40 border border-red-500/20 rounded-2xl p-4">
       <div className="flex items-start gap-4 mb-4">
-        <img
-          src={pin.card.smallImage}
-          alt={pin.card.name}
-          className="w-16 h-22 object-contain rounded-lg flex-shrink-0"
-        />
-        <div className="flex-1 min-w-0">
-          <h3 className="text-white font-bold truncate">{pin.card.name}</h3>
-          <p className="text-red-200/70 text-sm truncate">
-            {pin.card.set} · #{pin.card.number}
-          </p>
-          <p className="text-white text-lg font-black mt-1">
-            {pin.card.currentPrice != null
-              ? `${pin.card.currentPrice.toFixed(2)} €`
-              : '—'}
-          </p>
-          {hasLowConfidence && (
-            <div className="flex items-center gap-1 text-orange-400 text-xs mt-1">
-              <AlertTriangle size={12} />
-              <span>Prix possiblement imprécis</span>
-            </div>
-          )}
-        </div>
+        <a
+          href={pin.card.cardmarketUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-start gap-4 flex-1 min-w-0 group"
+          title="Voir sur Cardmarket (cartes FR)"
+        >
+          <img
+            src={pin.card.smallImage}
+            alt={pin.card.name}
+            className="w-16 h-22 object-contain rounded-lg flex-shrink-0 group-hover:scale-105 transition-transform"
+          />
+          <div className="flex-1 min-w-0">
+            <h3 className="text-white font-bold truncate flex items-center gap-1.5 group-hover:text-red-200 transition-colors">
+              <span className="truncate">{pin.card.name}</span>
+              <ExternalLink size={12} className="opacity-0 group-hover:opacity-70 transition-opacity flex-shrink-0" />
+            </h3>
+            <p className="text-red-200/70 text-sm truncate">
+              {pin.card.set} · #{pin.card.number}
+            </p>
+            <p className="text-white text-lg font-black mt-1">
+              {pin.card.currentPrice != null
+                ? `${pin.card.currentPrice.toFixed(2)} €`
+                : '—'}
+            </p>
+            {hasLowConfidence && (
+              <div className="flex items-center gap-1 text-orange-400 text-xs mt-1">
+                <AlertTriangle size={12} />
+                <span>Prix possiblement imprécis</span>
+              </div>
+            )}
+          </div>
+        </a>
         <button
           onClick={onUnpin}
           className="text-red-300 hover:text-red-100 transition-colors p-1"
@@ -129,7 +142,7 @@ export default function PinnedCardChart({ pin, range, onUnpin }: Props) {
                 fontSize={11}
                 tickFormatter={(v: number) => `${v.toFixed(0)}€`}
               />
-                            <Tooltip
+              <Tooltip
                 contentStyle={{
                   backgroundColor: '#1e293b',
                   border: '1px solid #ef4444',
