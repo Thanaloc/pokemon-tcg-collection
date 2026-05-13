@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { registerLimit, getClientIp } from '@/lib/ratelimit';
+import { registerSchema } from '@/lib/validation/auth';
 
 export async function POST(request: Request) {
   try {
@@ -17,14 +18,20 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { email, password, name } = body;
+    const parsed = registerSchema.safeParse(body);
 
-    if (!email || !password) {
+    if (!parsed.success) {
+      const firstIssue = parsed.error.issues[0];
       return NextResponse.json(
-        { error: 'Email et mot de passe requis' },
+        {
+          error: firstIssue.message,
+          field: firstIssue.path[0] ?? null,
+        },
         { status: 400 }
       );
     }
+
+    const { email, password, name } = parsed.data;
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
