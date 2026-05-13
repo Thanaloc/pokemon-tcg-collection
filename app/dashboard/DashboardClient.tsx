@@ -16,6 +16,7 @@ type Pin = {
     set: string;
     series: string;
     currentPrice: number | null;
+    cardmarketUrl: string;        // ← ajoute cette ligne
     pokemon: { id: number; name: string };
   };
 };
