@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import DashboardClient from './DashboardClient';
 import DashboardHeader from '@/components/Dashboard/DashboardHeader';
+import { buildCardmarketUrl } from '@/lib/cardmarket';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +25,7 @@ export default async function DashboardPage() {
     orderBy: { pinnedAt: 'desc' },
   });
 
-  const formattedPins = pins.map((p: any) => ({
+    const formattedPins = pins.map((p: any) => ({
     id: p.id,
     pinnedAt: p.pinnedAt.toISOString(),
     card: {
@@ -37,6 +38,10 @@ export default async function DashboardPage() {
       set: p.card.set.name,
       series: p.card.set.series,
       currentPrice: p.card.price?.cardmarketPrice || null,
+      cardmarketUrl: buildCardmarketUrl({
+        name: p.card.name,
+        number: p.card.number,
+      }),
       pokemon: {
         id: p.card.pokemon.id,
         name: p.card.pokemon.nameFr,

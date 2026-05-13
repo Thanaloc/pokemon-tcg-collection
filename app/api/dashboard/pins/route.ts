@@ -24,7 +24,7 @@ export async function GET() {
       orderBy: { pinnedAt: 'desc' },
     });
 
-      const formatted = pins.map((p: any) => ({
+        const formatted = pins.map((p: any) => ({
     id: p.id,
     pinnedAt: p.pinnedAt,
     card: {
