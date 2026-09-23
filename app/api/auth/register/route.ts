@@ -1,67 +1,78 @@
-import { NextResponse } from 'next/server';
+import { after, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { registerLimit, getClientIp } from '@/lib/ratelimit';
-import { registerSchema } from '@/lib/validation/auth';
+import { registerLimit, getClientIp, tooManyRequests } from '@/lib/ratelimit';
+import { firstIssue, registerSchema } from '@/lib/validation/auth';
+import { accountExistsEmail, isEmailEnabled, sendEmail, verificationEmail } from '@/lib/email';
+import { getAppUrl, issueVerificationToken } from '@/lib/auth-tokens';
 
 export async function POST(request: Request) {
   try {
     const ip = getClientIp(request);
     const { success, reset } = await registerLimit.limit(ip);
+    if (!success) return tooManyRequests(reset);
 
-    if (!success) {
-      const retryAfter = Math.ceil((reset - Date.now()) / 1000);
-      return NextResponse.json(
-        { error: 'Trop de tentatives. Réessayez dans quelques minutes.' },
-        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
-      );
-    }
-
-    const body = await request.json();
+    const body = await request.json().catch(() => null);
     const parsed = registerSchema.safeParse(body);
-
     if (!parsed.success) {
-      const firstIssue = parsed.error.issues[0];
-      return NextResponse.json(
-        {
-          error: firstIssue.message,
-          field: firstIssue.path[0] ?? null,
-        },
-        { status: 400 }
-      );
+      return NextResponse.json(firstIssue(parsed.error), { status: 400 });
     }
 
     const { email, password, name } = parsed.data;
+    const emailEnabled = isEmailEnabled();
+    const appUrl = getAppUrl(request);
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    // Hash before looking the account up so both paths take the same time.
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const existingUser = await prisma.user.findUnique({ where: { email } });
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'Un compte existe déjà avec cet email' },
-        { status: 400 }
-      );
+      // Without email we can't reach the owner, so say it plainly (old behavior).
+      if (!emailEnabled) {
+        return NextResponse.json(
+          { error: 'Un compte existe déjà avec cet email', field: 'email' },
+          { status: 400 },
+        );
+      }
+
+      // Same answer as a real signup: the mailbox owner learns what happened.
+      after(async () => {
+        try {
+          if (existingUser.emailVerified) {
+            await sendEmail(accountExistsEmail(email, `${appUrl}/login`, `${appUrl}/forgot-password`));
+          } else {
+            const token = await issueVerificationToken(email);
+            await sendEmail(verificationEmail(email, `${appUrl}/verify-email?token=${token}`));
+          }
+        } catch (error) {
+          console.error('Register email (existing account) failed:', error);
+        }
+      });
+      return NextResponse.json({ requiresVerification: true }, { status: 201 });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
-        name: name || null,
-        emailVerified: new Date(),
+        name: name ?? null,
+        emailVerified: emailEnabled ? null : new Date(),
       },
     });
 
-    return NextResponse.json(
-      {
-        message: 'Compte créé avec succès !',
-        userId: user.id,
-      },
-      { status: 201 }
-    );
+    if (emailEnabled) {
+      after(async () => {
+        try {
+          const token = await issueVerificationToken(email);
+          await sendEmail(verificationEmail(email, `${appUrl}/verify-email?token=${token}`));
+        } catch (error) {
+          // The user can ask for a new link from the login page.
+          console.error('Verification email failed:', error);
+        }
+      });
+    }
+
+    return NextResponse.json({ requiresVerification: emailEnabled }, { status: 201 });
   } catch (error) {
     console.error('Registration error:', error);
     return NextResponse.json(
