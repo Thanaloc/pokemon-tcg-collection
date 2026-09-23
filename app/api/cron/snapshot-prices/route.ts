@@ -1,46 +1,20 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { rejectUnauthorizedCron } from '@/lib/cron';
+import { mapWithConcurrency, tcgdexFetch, type TcgdexCard } from '@/lib/tcgdex/client';
+import { applyRefreshes, toRefresh, type CardRefresh } from '@/lib/tcgdex/sync';
 
-const TCGDEX_API = 'https://api.tcgdex.net/v2/fr';
+export const maxDuration = 300;
+export const dynamic = 'force-dynamic';
 
-async function fetchWithRetry(url: string, retries = 3) {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0',
-          'Accept': 'application/json',
-        },
-        signal: AbortSignal.timeout(15000),
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) return null;
-        throw new Error(`HTTP ${response.status}`);
-      }
-      return await response.json();
-    } catch (error) {
-      if (i === retries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-    }
-  }
-}
+const BUDGET_MS = 260_000;
 
 export async function GET(request: Request) {
+  const rejected = rejectUnauthorizedCron(request);
+  if (rejected) return rejected;
+
+  const deadline = Date.now() + BUDGET_MS;
   try {
-    const authHeader = request.headers.get('authorization');
-    const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
-
-    if (!process.env.CRON_SECRET) {
-      console.error('CRON_SECRET not configured');
-      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
-    }
-
-    if (authHeader !== expectedAuth) {
-      console.error('Unauthorized cron request');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     console.log('📈 Starting price snapshot cron...');
 
     const pinned = await prisma.pinnedCard.findMany({
@@ -50,81 +24,75 @@ export async function GET(request: Request) {
     const pinnedCardIds = pinned.map(p => p.cardId);
 
     if (pinnedCardIds.length === 0) {
-      console.log('No pinned cards, skipping');
       return NextResponse.json({
         success: true,
         stats: { pinnedCards: 0, snapshotsCreated: 0, errors: 0 },
       });
     }
 
-    // Precompute confidence: a card is LOW if its (set, name) pair has multiple
-    // rarities in our DB — TCGdex FR is known to mix up prices in that case.
-    const pinnedCardsInfo = await prisma.card.findMany({
-      where: { id: { in: pinnedCardIds } },
-      select: { id: true, setId: true, name: true },
+    // A card is LOW confidence if its (set, name) pair has several rarities:
+    // TCGdex FR is known to mix up prices between those versions.
+    const lowConfidence = new Set(
+      (await prisma.$queryRaw<{ id: string }[]>`
+        SELECT p.id FROM cards p
+        WHERE p.id = ANY(${pinnedCardIds}::text[])
+          AND (SELECT COUNT(DISTINCT c.rarity) FROM cards c
+               WHERE c.set_id = p.set_id AND c.name = p.name) > 1`
+      ).map(row => row.id),
+    );
+
+    const results = await mapWithConcurrency(
+      pinnedCardIds,
+      8,
+      cardId => tcgdexFetch<TcgdexCard>(`/cards/${encodeURIComponent(cardId)}`),
+      () => Date.now() < deadline,
+    );
+
+    const snapshots: { cardId: string; cardmarketPrice: number; confidence: 'HIGH' | 'LOW' }[] = [];
+    const refreshes: CardRefresh[] = [];
+    let errors = 0;
+    let skipped = 0;
+
+    results.forEach((result, index) => {
+      const cardId = pinnedCardIds[index];
+      if (result.status === 'skipped') {
+        skipped++;
+      } else if (result.status === 'error') {
+        errors++;
+        console.error(`Error snapshotting card ${cardId}:`, result.error);
+      } else if (result.value) {
+        const refresh = toRefresh(result.value);
+        refreshes.push(refresh);
+        if (refresh.price !== null) {
+          snapshots.push({
+            cardId,
+            cardmarketPrice: refresh.price,
+            confidence: lowConfidence.has(cardId) ? 'LOW' : 'HIGH',
+          });
+        }
+      }
     });
 
-    const confidenceCache = new Map<string, 'HIGH' | 'LOW'>();
-    const confidenceByCard = new Map<string, 'HIGH' | 'LOW'>();
+    // Keep the "current price" shown on the dashboard in line with the chart.
+    await applyRefreshes(prisma, refreshes, refreshes.map(r => r.id));
+    const { count } = await prisma.priceHistory.createMany({ data: snapshots });
 
-    for (const card of pinnedCardsInfo) {
-      const cacheKey = `${card.setId}::${card.name}`;
-      let confidence = confidenceCache.get(cacheKey);
-
-      if (confidence === undefined) {
-        const distinctRarities = await prisma.card.findMany({
-          where: { setId: card.setId, name: card.name },
-          select: { rarity: true },
-          distinct: ['rarity'],
-        });
-        confidence = distinctRarities.length > 1 ? 'LOW' : 'HIGH';
-        confidenceCache.set(cacheKey, confidence);
-      }
-
-      confidenceByCard.set(card.id, confidence);
-    }
-
-    let snapshotsCreated = 0;
-    let errors = 0;
-
-    for (const cardId of pinnedCardIds) {
-      try {
-        const card = await fetchWithRetry(`${TCGDEX_API}/cards/${cardId}`);
-        if (!card) continue;
-
-        const cardmarketPrice = card.pricing?.cardmarket?.avg
-          || card.pricing?.cardmarket?.avg7
-          || card.pricing?.cardmarket?.avg30
-          || null;
-
-        if (!cardmarketPrice || cardmarketPrice <= 0) continue;
-
-        await prisma.priceHistory.create({
-          data: {
-            cardId,
-            cardmarketPrice,
-            confidence: confidenceByCard.get(cardId) || 'HIGH',
-          },
-        });
-        snapshotsCreated++;
-      } catch (error: any) {
-        console.error(`Error snapshotting card ${cardId}:`, error.message);
-        errors++;
-      }
-    }
-
-    console.log(`✅ Snapshot complete: ${snapshotsCreated} created, ${errors} errors`);
+    console.log(`✅ Snapshot complete: ${count} created, ${errors} errors, ${skipped} skipped`);
 
     return NextResponse.json({
       success: true,
       stats: {
         pinnedCards: pinnedCardIds.length,
-        snapshotsCreated,
+        snapshotsCreated: count,
         errors,
+        skipped,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Snapshot cron failed:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 },
+    );
   }
 }

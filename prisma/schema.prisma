@@ -16,27 +16,32 @@ model Pokemon {
 }
 
 model Set {
-  id          String   @id
-  name        String
-  series      String
-  releaseDate DateTime @map("release_date")
-  cards       Card[]
+  id              String   @id
+  name            String
+  series          String
+  releaseDate     DateTime @map("release_date")
+  // Number of cards TCGdex listed for this set the last time every one of
+  // them was processed. Null means the set still has to be (re)synced.
+  syncedCardCount Int?     @map("synced_card_count")
+  cards           Card[]
 
   @@map("sets")
 }
 
 model Card {
-  id           String   @id
-  pokemonId    Int      @map("pokemon_id")
-  setId        String   @map("set_id")
-  number       String
-  name         String
-  rarity       String
-  imageFr      String?  @map("image_fr")
-  imageEn      String?  @map("image_en")
-  imageSmallFr String?  @map("image_small_fr")
-  imageSmallEn String?  @map("image_small_en")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id             String    @id
+  pokemonId      Int       @map("pokemon_id")
+  setId          String    @map("set_id")
+  number         String
+  name           String
+  rarity         String
+  imageFr        String?   @map("image_fr")
+  imageEn        String?   @map("image_en")
+  imageSmallFr   String?   @map("image_small_fr")
+  imageSmallEn   String?   @map("image_small_en")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  // Last time the price refresh looked this card up on TCGdex.
+  priceCheckedAt DateTime? @map("price_checked_at")
 
   pokemon         Pokemon          @relation(fields: [pokemonId], references: [id])
   set             Set              @relation(fields: [setId], references: [id])
@@ -47,6 +52,7 @@ model Card {
 
   @@index([pokemonId])
   @@index([setId])
+  @@index([priceCheckedAt])
   @@map("cards")
 }
 
@@ -63,13 +69,15 @@ model Price {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  password      String
-  name          String?
-  emailVerified DateTime? @map("email_verified")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  id             String    @id @default(cuid())
+  email          String    @unique
+  password       String
+  name           String?
+  emailVerified  DateTime? @map("email_verified")
+  // Bumped on password change/reset: every JWT carrying an older value is rejected.
+  sessionVersion Int       @default(0) @map("session_version")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   collections         UserCollection[]
   verificationTokens  VerificationToken[]
