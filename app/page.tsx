@@ -5,7 +5,7 @@ import SiteNav from '@/components/Header/SiteNav';
 import SearchBar from '@/components/Header/SearchBar';
 import PokemonGrid from '@/components/Pokemon/PokemonGrid';
 import PokemonModal from '@/components/Modal/PokemonModal';
-import CardRail, { type RailCard } from '@/components/Home/CardRail';
+import PokemonOfTheDay, { type PokemonOfTheDayData } from '@/components/Home/PokemonOfTheDay';
 import PokemonArt from '@/components/ui/PokemonArt';
 import { usePokemonData } from '@/hooks/usePokemonData';
 import { TYPES, TYPE_IDS } from '@/constants/types';
@@ -14,9 +14,7 @@ import { Pokemon } from '@/types';
 const format = new Intl.NumberFormat('fr-FR');
 
 interface Highlights {
-  latestSet: { name: string; releaseDate: string } | null;
-  newest: RailCard[];
-  priciest: RailCard[];
+  pokemonOfTheDay: PokemonOfTheDayData | null;
 }
 
 export default function Page() {
@@ -50,52 +48,32 @@ export default function Page() {
       <SiteNav />
 
       <main className="max-w-7xl mx-auto px-4 py-6 sm:py-10">
-        <section className="relative mb-10 flex flex-col md:flex-row md:items-center gap-6">
-          <div className="flex-1">
-            <h1 className="text-3xl sm:text-5xl font-extrabold text-white leading-tight">
-              Toutes les cartes,<br />
-              <span className="text-red-500">Pokémon par Pokémon.</span>
-            </h1>
-            <p className="text-slate-400 mt-3 max-w-xl">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Pokédex</h1>
+            <p className="text-sm text-slate-400 mt-1">
               {isLoading
-                ? 'Chargement du Pokédex…'
-                : `${format.format(cardCount)} cartes françaises réparties sur ${format.format(allPokemon.length)} Pokémon, avec leur prix Cardmarket. Construisez votre collection et suivez la cote de vos cartes.`}
+                ? 'Chargement…'
+                : `${format.format(allPokemon.length)} Pokémon · ${format.format(cardCount)} cartes françaises`}
             </p>
-            <div className="mt-5 max-w-xl">
-              <SearchBar value={searchTerm} onChange={setSearchTerm} />
-            </div>
           </div>
-          <div className="hidden md:flex items-end -space-x-10 pr-4" aria-hidden="true">
-            <PokemonArt id={25} className="w-36 h-36 drop-shadow-xl -rotate-6" />
-            <PokemonArt id={6} className="w-48 h-48 drop-shadow-xl" />
-            <PokemonArt id={249} className="w-36 h-36 drop-shadow-xl rotate-6" />
+          <div className="w-full sm:max-w-md">
+            <SearchBar value={searchTerm} onChange={setSearchTerm} />
           </div>
-        </section>
+        </div>
 
-        {browsing && highlights && (
-          <div className="mb-10 space-y-8">
-            <CardRail
-              title="Nouveautés"
-              subtitle={highlights.latestSet ? `${highlights.latestSet.name} · ${new Date(highlights.latestSet.releaseDate).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}` : undefined}
-              cards={highlights.newest}
-              onSelect={openPokemon}
-            />
-            <CardRail
-              title="Les plus chères"
-              subtitle="Prix moyen Cardmarket"
-              cards={highlights.priciest}
-              onSelect={openPokemon}
-            />
+        {browsing && highlights?.pokemonOfTheDay && (
+          <div className="mb-8">
+            <PokemonOfTheDay data={highlights.pokemonOfTheDay} onOpen={openPokemon} />
           </div>
         )}
 
-        <div className="mb-4 flex flex-col gap-3">
-          <h2 className="text-lg font-bold text-white">Pokédex</h2>
+        <div className="mb-4">
           <div className="no-scrollbar -mx-4 px-4 flex gap-1.5 overflow-x-auto" role="group" aria-label="Filtrer par type">
             <button
               onClick={() => setTypeFilter(null)}
               aria-pressed={typeFilter === null}
-              className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${typeFilter === null ? 'bg-white text-slate-900' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}`}
+              className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition active:scale-[0.95] ${typeFilter === null ? 'bg-white text-slate-900' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}`}
             >
               Tous
             </button>
@@ -106,7 +84,7 @@ export default function Page() {
                   key={type}
                   onClick={() => setTypeFilter(active ? null : type)}
                   aria-pressed={active}
-                  className="shrink-0 rounded-full px-3 py-1 text-xs font-medium text-white transition-colors border"
+                  className="shrink-0 rounded-full px-3 py-1 text-xs font-medium text-white transition border active:scale-[0.95]"
                   style={{
                     backgroundColor: active ? TYPES[type].color : 'transparent',
                     borderColor: `${TYPES[type].color}${active ? '' : '66'}`,

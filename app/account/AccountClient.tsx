@@ -8,7 +8,7 @@ import { Alert, Field, PasswordField, Spinner, inputClass } from '@/components/A
 import { PASSWORD_MIN_LENGTH } from '@/lib/validation/password-rules';
 
 const buttonClass = `px-4 py-2 rounded-md font-medium text-sm text-white
-  bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors`;
+  bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition active:scale-[0.97]`;
 
 function Section({ title, description, children, danger = false }: {
   title: string;

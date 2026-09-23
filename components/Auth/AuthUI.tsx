@@ -14,7 +14,7 @@ export const inputClass = `w-full pl-10 pr-4 py-2.5
 export const primaryButtonClass = `w-full py-2.5
   bg-red-600 hover:bg-red-500 disabled:bg-red-600/50
   text-white text-center font-medium rounded-md
-  transition-colors disabled:cursor-not-allowed`;
+  transition active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100`;
 
 export function Spinner({ label }: { label: string }) {
   return (

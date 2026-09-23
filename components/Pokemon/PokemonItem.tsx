@@ -18,7 +18,7 @@ export default React.memo(function PokemonItem({ pokemon, onSelect }: Props) {
       onClick={() => onSelect(pokemon)}
       aria-label={`Voir les cartes de ${pokemon.name}`}
       className="group relative text-left rounded-xl border border-slate-800 bg-slate-900 p-3 overflow-hidden
-                 hover:border-slate-600 transition-colors
+                 hover:border-slate-600 transition active:scale-[0.98]
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
       style={{ backgroundImage: `radial-gradient(120% 70% at 50% 0%, ${color}38, transparent 70%)` }}
     >

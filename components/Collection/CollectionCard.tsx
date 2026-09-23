@@ -24,7 +24,7 @@ interface Props {
 const euros = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
 const stepButton = `p-1.5 rounded-md border border-slate-800 text-slate-300
-  hover:text-white hover:border-slate-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed`;
+  hover:text-white hover:border-slate-600 transition active:scale-[0.94] disabled:opacity-40 disabled:cursor-not-allowed`;
 
 export default function CollectionCard({ card, quantity, onUpdateQuantity, onRemove }: Props) {
   return (

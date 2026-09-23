@@ -47,7 +47,7 @@ export default function SiteNav() {
             <Link href="/login" className="px-3 py-1.5 text-sm text-slate-300 hover:text-white transition-colors">
               Connexion
             </Link>
-            <Link href="/register" className="px-3 py-1.5 text-sm font-medium rounded-md bg-red-600 hover:bg-red-500 text-white transition-colors">
+            <Link href="/register" className="px-3 py-1.5 text-sm font-medium rounded-md bg-red-600 hover:bg-red-500 text-white transition active:scale-[0.97]">
               Créer un compte
             </Link>
           </div>

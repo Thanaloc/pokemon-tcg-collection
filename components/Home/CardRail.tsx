@@ -16,8 +16,6 @@ export interface RailCard {
 }
 
 interface Props {
-  title: string;
-  subtitle?: string;
   cards: RailCard[];
   onSelect: (pokemonId: number) => void;
 }
@@ -25,22 +23,17 @@ interface Props {
 const euros = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
 /** Horizontal strip of cards; clicking one opens its Pokémon. */
-export default function CardRail({ title, subtitle, cards, onSelect }: Props) {
+export default function CardRail({ cards, onSelect }: Props) {
   if (cards.length === 0) return null;
 
   return (
-    <section>
-      <div className="mb-3 flex items-baseline gap-3">
-        <h2 className="text-lg font-bold text-white">{title}</h2>
-        {subtitle && <p className="text-sm text-slate-500 truncate">{subtitle}</p>}
-      </div>
-      <div className="no-scrollbar -mx-4 px-4 flex gap-4 overflow-x-auto pb-2 pt-1 snap-x">
+    <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2 pt-1 snap-x">
         {cards.map(card => (
           <button
             key={card.id}
             type="button"
             onClick={() => onSelect(card.pokemonId)}
-            className="w-32 sm:w-36 shrink-0 snap-start text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded-lg"
+            className="w-28 sm:w-32 shrink-0 snap-start text-left rounded-lg transition active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
             aria-label={`${card.name}, ${card.set}`}
           >
             <HoloCard foil={isFoilRarity(card.rarity) && hasCardImage(card.smallImage)}>
@@ -53,7 +46,6 @@ export default function CardRail({ title, subtitle, cards, onSelect }: Props) {
             </p>
           </button>
         ))}
-      </div>
-    </section>
+    </div>
   );
 }
