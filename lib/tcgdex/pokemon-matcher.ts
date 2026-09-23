@@ -4,11 +4,17 @@ interface PokemonNames {
   nameEn: string;
 }
 
+// Misspellings found in TCGdex data (normalized name → Pokédex number).
+// Add an entry when the cron logs "No Pokémon match" for a real Pokémon card.
+const NAME_ALIASES: Record<string, number> = {
+  nostenfert: 169, // "Nostenfert G" (30th-c-011) for Nostenfer
+};
+
 export function normalizeName(value: string): string {
   return value
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]/g, '');
 }
 
@@ -20,7 +26,7 @@ export function normalizeName(value: string): string {
  */
 export function createPokemonMatcher(pokemon: PokemonNames[]) {
   const knownIds = new Set(pokemon.map(p => p.id));
-  const byName = new Map<string, number>();
+  const byName = new Map<string, number>(Object.entries(NAME_ALIASES));
   for (const p of pokemon) {
     for (const name of [p.nameFr, p.nameEn]) {
       const key = normalizeName(name);

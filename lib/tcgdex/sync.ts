@@ -217,10 +217,12 @@ export async function syncCatalog(prisma: PrismaClient, options: SyncOptions = {
     });
 
     const rows = [];
+    let unmatchedInSet = 0;
     for (const card of newCards) {
       const pokemonId = matchPokemon(card);
       if (pokemonId === null) {
         stats.unmatchedCards++;
+        unmatchedInSet++;
         log(`⚠️  No Pokémon match: ${card.name} (${card.id})`);
         continue;
       }
@@ -247,6 +249,10 @@ export async function syncCatalog(prisma: PrismaClient, options: SyncOptions = {
 
     if (incomplete) {
       stats.setsPending++;
+    } else if (unmatchedInSet > 0) {
+      // Left unsynced on purpose: the next run retries these cards (cheap, only
+      // the cards missing from the database), so a fix to the matcher or to
+      // TCGdex data brings them in without any manual step.
     } else {
       await prisma.set.update({
         where: { id: set.id },
