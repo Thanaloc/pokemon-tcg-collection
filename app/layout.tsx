@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 import SessionProvider from "@/components/SessionProvider/SessionProvider";
 import Footer from "@/components/Footer";
 import { ToastProvider } from "@/app/contexts/ToastContext";
@@ -7,6 +7,12 @@ import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+// Display face for titles: gives the site its own voice next to Geist.
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-display",
   subsets: ["latin"],
 });
 
@@ -31,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${bricolage.variable} antialiased`}
       >
         <ToastProvider>
           <SessionProvider>

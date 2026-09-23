@@ -5,6 +5,8 @@ import CardFilters from './CardFilters';
 import CardGrid from './CardGrid';
 import { rarityRank } from '@/constants/rarities';
 import { X } from 'lucide-react';
+import { typeColor } from '@/constants/types';
+import TypeBadge from '@/components/ui/TypeBadge';
 
 const COLLECTION_ENABLED = true;
 
@@ -235,19 +237,25 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                 className="bg-slate-950 rounded-xl w-full max-w-6xl max-h-[92vh] flex flex-col border border-slate-800 shadow-2xl overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="flex items-center justify-between gap-4 px-4 sm:px-6 py-4 border-b border-slate-800">
-                    <div className="flex items-center gap-3 min-w-0">
+                <div
+                    className="flex items-center justify-between gap-4 px-4 sm:px-6 py-4 border-b border-slate-800"
+                    style={{ backgroundImage: `linear-gradient(100deg, ${typeColor(pokemon.types[0])}40, transparent 60%)` }}
+                >
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         {/* eslint-disable-next-line @next/next/no-img-element -- PokeAPI artwork */}
-                        <img src={pokemon.imageUrl} alt="" className="w-12 h-12 object-contain shrink-0" onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
+                        <img src={pokemon.imageUrl} alt="" className="w-16 h-16 sm:w-20 sm:h-20 -my-2 object-contain shrink-0 drop-shadow-lg" onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
                         <div className="min-w-0">
-                            <p className="text-xs text-slate-500 tabular-nums">#{pokemon.number}</p>
-                            <h2 id="modal-title" className="text-xl font-bold text-white truncate">{pokemon.name}</h2>
+                            <p className="text-xs text-slate-400 tabular-nums">#{pokemon.number}</p>
+                            <h2 id="modal-title" className="text-2xl font-bold text-white truncate">{pokemon.name}</h2>
+                            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                                {pokemon.types.map(type => <TypeBadge key={type} type={type} />)}
+                                {!isLoading && (
+                                    <span className="text-xs text-slate-400 ml-1">
+                                        {cards.length} carte{cards.length > 1 ? 's' : ''}
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                        {!isLoading && (
-                            <span className="ml-2 text-sm text-slate-400 shrink-0">
-                                {cards.length} carte{cards.length > 1 ? 's' : ''}
-                            </span>
-                        )}
                     </div>
 
                     <button

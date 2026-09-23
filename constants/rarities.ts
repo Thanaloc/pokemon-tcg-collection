@@ -49,3 +49,10 @@ export function rarityRank(name: string): number {
 export function rarityClass(name: string): string {
   return CLASS.get(name) ?? UNKNOWN_RARITY_CLASS;
 }
+
+const FOIL_FROM = RANK.get('Rare Holo') ?? 0;
+
+/** Holo and above: gets the rainbow sheen on hover. */
+export function isFoilRarity(name: string): boolean {
+  return rarityRank(name) >= FOIL_FROM;
+}

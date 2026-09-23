@@ -1,10 +1,11 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import type { Card } from '@/types';
-import { rarityClass } from '@/constants/rarities';
+import { isFoilRarity, rarityClass } from '@/constants/rarities';
 import { AlertTriangle, Check, ExternalLink, Pin, Plus } from 'lucide-react';
 import { useCollection } from '@/hooks/useCollection';
-import CardImage from '@/components/ui/CardImage';
+import CardImage, { hasCardImage } from '@/components/ui/CardImage';
+import HoloCard from '@/components/ui/HoloCard';
 
 interface Props {
   card: Card;
@@ -56,10 +57,12 @@ export default function CardItem({
   return (
     <div className="flex flex-col rounded-lg border border-slate-800 bg-slate-900 p-2.5">
       <div className="relative">
-        <CardImage src={card.smallImage} alt={`${card.name} — ${card.set} #${card.number}`} />
+        <HoloCard foil={isFoilRarity(card.rarity) && hasCardImage(card.smallImage)}>
+          <CardImage src={card.smallImage} alt={`${card.name} — ${card.set} #${card.number}`} />
+        </HoloCard>
         {ownedQuantity > 0 && (
           <span
-            className="absolute top-1.5 left-1.5 flex items-center gap-1 rounded bg-emerald-600 px-1.5 py-0.5 text-xs font-semibold text-white"
+            className="absolute z-10 top-1.5 left-1.5 flex items-center gap-1 rounded bg-emerald-600 px-1.5 py-0.5 text-xs font-semibold text-white"
             title={`${ownedQuantity} dans votre collection`}
           >
             <Check size={12} /> {ownedQuantity}

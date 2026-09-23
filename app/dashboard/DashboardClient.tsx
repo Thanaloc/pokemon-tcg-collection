@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import PinnedCardChart from './PinnedCardChart';
+import PokemonArt from '@/components/ui/PokemonArt';
 
 type Pin = {
   id: number;
@@ -50,8 +51,9 @@ export default function DashboardClient({ initialPins }: Props) {
 
   if (pins.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-slate-800 p-10 text-center">
-        <p className="text-white font-medium">Aucune carte suivie pour l&apos;instant</p>
+      <div className="rounded-xl border border-dashed border-slate-800 p-10 text-center">
+        <PokemonArt id={133} className="w-28 h-28 mx-auto mb-3" />
+        <p className="font-display text-lg font-semibold text-white">Aucune carte suivie pour l&apos;instant</p>
         <p className="text-slate-400 text-sm mt-1">
           Ouvrez un Pokémon et cliquez sur l&apos;épingle d&apos;une carte pour suivre son prix ici.
         </p>

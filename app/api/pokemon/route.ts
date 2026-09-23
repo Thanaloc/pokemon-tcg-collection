@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import pokemonNames from '@/public/pokemon-names.json';
 import { prisma } from '@/lib/prisma';
+import { typesOf } from '@/constants/types';
 
 // Same for every visitor and only changes with the daily sync: cache it on the CDN.
 const CACHE_HEADERS = { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' };
@@ -25,7 +26,7 @@ export async function GET() {
     nameEn: namesEn.get(p.id),
     cardCount: cardCounts.get(p.id) ?? 0,
     number: String(p.id).padStart(3, '0'),
-    types: [],
+    types: typesOf(p.id),
     imageUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${p.id}.png`
   }));
 

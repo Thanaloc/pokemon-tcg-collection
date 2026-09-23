@@ -1,5 +1,7 @@
 import { Trash2, Plus, Minus } from 'lucide-react';
-import CardImage from '@/components/ui/CardImage';
+import CardImage, { hasCardImage } from '@/components/ui/CardImage';
+import HoloCard from '@/components/ui/HoloCard';
+import { isFoilRarity } from '@/constants/rarities';
 
 interface Props {
   card: {
@@ -27,7 +29,9 @@ const stepButton = `p-1.5 rounded-md border border-slate-800 text-slate-300
 export default function CollectionCard({ card, quantity, onUpdateQuantity, onRemove }: Props) {
   return (
     <div className="flex flex-col rounded-lg border border-slate-800 bg-slate-900 p-2.5">
-      <CardImage src={card.smallImage} alt={`${card.name} — ${card.set} #${card.number}`} />
+      <HoloCard foil={isFoilRarity(card.rarity) && hasCardImage(card.smallImage)}>
+        <CardImage src={card.smallImage} alt={`${card.name} — ${card.set} #${card.number}`} />
+      </HoloCard>
 
       <div className="mt-2.5 flex-1">
         <p className="text-sm font-medium text-white truncate">{card.pokemon.name}</p>

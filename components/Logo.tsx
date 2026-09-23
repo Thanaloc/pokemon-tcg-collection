@@ -11,7 +11,7 @@ export default function Logo() {
         <circle cx="16" cy="16" r="4.5" fill="#f1f5f9" stroke="#0f172a" strokeWidth="2.5" />
         <circle cx="16" cy="16" r="14" fill="none" stroke="#0f172a" strokeWidth="2" />
       </svg>
-      <span className="font-semibold tracking-tight hidden sm:inline">Pokémon TCG Collection</span>
+      <span className="font-display font-bold tracking-tight hidden sm:inline">Pokémon TCG Collection</span>
     </Link>
   );
 }

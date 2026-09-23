@@ -12,6 +12,52 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+h1, h2, .font-display {
+  font-family: var(--font-display), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Holographic card: tilts toward the pointer with a moving glare. Foil
+   rarities get a rainbow sheen. Variables are set by <HoloCard>. */
+.holo {
+  position: relative;
+  border-radius: 0.5rem;
+  transform: perspective(700px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.45s ease;
+  will-change: transform;
+}
+.holo[data-active] {
+  transition: transform 0.08s linear;
+}
+.holo-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.35), transparent 55%);
+  mix-blend-mode: soft-light;
+}
+.holo[data-active] .holo-glare {
+  opacity: 1;
+}
+.holo[data-foil="true"] .holo-glare {
+  background:
+    radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.45), transparent 50%),
+    linear-gradient(115deg, transparent 20%, rgba(255, 0, 170, 0.22) 36%, rgba(0, 220, 255, 0.22) 50%, rgba(255, 230, 0, 0.22) 64%, transparent 80%);
+  background-size: 100% 100%, 250% 250%;
+  background-position: center, var(--mx, 50%) var(--my, 50%);
+  mix-blend-mode: color-dodge;
+}
+@media (prefers-reduced-motion: reduce) {
+  .holo { transform: none !important; }
+}
+
+/* Horizontal rails without a visible scrollbar */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 /* Scrollbar personnalise grise */
 .custom-scrollbar::-webkit-scrollbar {
   width: 12px;

@@ -4,6 +4,11 @@ import { useState } from 'react';
 
 export const CARD_PLACEHOLDER = '/placeholder-card.svg';
 
+/** False when the API had no picture for the card (it sends the placeholder). */
+export function hasCardImage(src: string | null | undefined): boolean {
+  return !!src && src !== CARD_PLACEHOLDER;
+}
+
 interface Props {
   src: string | null | undefined;
   alt: string;

@@ -1,9 +1,11 @@
 import Link from 'next/link';
+import PokemonArt from '@/components/ui/PokemonArt';
 
 export default function CollectionEmpty() {
   return (
-    <div className="rounded-lg border border-dashed border-slate-800 p-10 text-center">
-      <p className="text-white font-medium">Votre collection est vide</p>
+    <div className="rounded-xl border border-dashed border-slate-800 p-10 text-center">
+      <PokemonArt id={143} className="w-32 h-32 mx-auto mb-3" />
+      <p className="font-display text-lg font-semibold text-white">Votre collection dort encore</p>
       <p className="text-slate-400 text-sm mt-1 mb-5">
         Ouvrez un Pokémon et ajoutez les cartes que vous possédez.
       </p>
