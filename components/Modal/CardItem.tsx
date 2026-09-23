@@ -2,8 +2,9 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import type { Card } from '@/types';
 import { rarityClass } from '@/constants/rarities';
-import { AlertTriangle, Pin, PinOff } from 'lucide-react';
+import { AlertTriangle, Check, ExternalLink, Pin, Plus } from 'lucide-react';
 import { useCollection } from '@/hooks/useCollection';
+import CardImage from '@/components/ui/CardImage';
 
 interface Props {
   card: Card;
@@ -15,6 +16,12 @@ interface Props {
   onTogglePin: (cardId: string) => void;
   isPinLoading?: boolean;
 }
+
+const euros = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+
+const iconButton = 'p-2 rounded-md border transition-colors disabled:opacity-50';
+const iconIdle = 'border-slate-800 text-slate-400 hover:text-white hover:border-slate-600';
+const iconActive = 'border-amber-500/40 text-amber-400 hover:text-amber-300';
 
 export default function CardItem({
   card,
@@ -34,14 +41,11 @@ export default function CardItem({
       router.push('/login');
       return;
     }
-
     const success = await addToCollection(card.id);
-    if (success && onCardAdded) {
-      onCardAdded(card.id);
-    }
+    if (success && onCardAdded) onCardAdded(card.id);
   };
 
-    const handleTogglePin = () => {
+  const handleTogglePin = () => {
     if (!isAuthenticated) {
       router.push('/login');
       return;
@@ -50,114 +54,77 @@ export default function CardItem({
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-4 
-                    hover:shadow-2xl hover:shadow-red-500/30 hover:scale-105 
-                    transition-all duration-300 
-                    border border-red-500/20 hover:border-red-400/50 
-                    relative group">
-      
-      <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
+    <div className="flex flex-col rounded-lg border border-slate-800 bg-slate-900 p-2.5">
+      <div className="relative">
+        <CardImage src={card.smallImage} alt={`${card.name} — ${card.set} #${card.number}`} />
+        {ownedQuantity > 0 && (
+          <span
+            className="absolute top-1.5 left-1.5 flex items-center gap-1 rounded bg-emerald-600 px-1.5 py-0.5 text-xs font-semibold text-white"
+            title={`${ownedQuantity} dans votre collection`}
+          >
+            <Check size={12} /> {ownedQuantity}
+          </span>
+        )}
+      </div>
 
-      {ownedQuantity > 0 && (
-        <div className="absolute top-2 left-2 z-10 
-                        bg-gradient-to-r from-green-500 to-emerald-600 
-                        text-white text-xs font-bold px-2.5 py-1.5 rounded-lg 
-                        flex items-center gap-1 shadow-lg">
-          ✓ {ownedQuantity}
-        </div>
-      )}
-
-      {card.price != null && (
-        <div className={`absolute top-2 right-2 z-10 
-                        ${hasPriceWarning
-                ? 'bg-gradient-to-r from-orange-500 to-red-500' 
-                : 'bg-gradient-to-r from-green-500 to-emerald-600'} 
-                        text-white text-xs font-bold px-2.5 py-1.5 rounded-lg 
-                        flex items-center gap-1 shadow-lg
-                        hover:scale-110 transition-transform`}>
-          {hasPriceWarning && <AlertTriangle size={12} />}
-          {card.price.toFixed(2)}€
-        </div>
-      )}
-
-      <img 
-        src={card.smallImage} 
-        alt={`${card.name} — ${card.set} #${card.number}`}
-        className="w-full aspect-[245/342] object-contain rounded-xl shadow-lg mb-3 border border-red-500/10 group-hover:shadow-red-500/30 transition-shadow" 
-        loading="lazy" 
-      />
-
-      <div className="text-sm space-y-2 relative z-10">
-        <p className="font-bold text-white truncate text-center">{card.set}</p>
-        <div className="flex justify-center mt-1">
-          <span className={`inline-block text-xs px-3 py-1.5 rounded-lg font-bold shadow-md ${rarityClass(card.rarity)}`}>
+      <div className="mt-2.5 flex-1 space-y-1.5">
+        <p className="text-sm font-medium text-white truncate" title={card.set}>{card.set}</p>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs text-slate-500 tabular-nums">#{card.number}</span>
+          <span className={`truncate rounded px-1.5 py-0.5 text-[11px] font-medium ${rarityClass(card.rarity)}`} title={card.rarity}>
             {card.rarity}
           </span>
         </div>
-        <div className="flex items-center justify-center text-xs text-red-300/70 font-mono mt-1">
-          <span>#{card.number}</span>
-        </div>
+        <p className="text-sm tabular-nums">
+          {card.price != null ? (
+            <span
+              className={`inline-flex items-center gap-1 ${hasPriceWarning ? 'text-amber-400' : 'text-slate-200'}`}
+              title={hasPriceWarning ? 'Prix possiblement imprécis : plusieurs versions de cette carte existent dans ce set' : undefined}
+            >
+              {hasPriceWarning && <AlertTriangle size={13} />}
+              {euros.format(card.price)}
+            </span>
+          ) : (
+            <span className="text-slate-600">Prix inconnu</span>
+          )}
+        </p>
       </div>
 
-      {hasPriceWarning && card.price && (
-        <div className="mt-2 bg-orange-500/10 border border-orange-500/20 rounded-lg p-2 text-xs text-orange-200 relative z-10">
-          ⚠️ Prix possiblement imprécis (plusieurs versions)
-        </div>
-      )}
-
-      <div className="mt-3 space-y-2 relative z-10">
-        {card.cardmarketUrl && (
-          <a 
-            href={card.cardmarketUrl} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="block w-full py-2.5 text-xs 
-                       bg-gradient-to-r from-red-600 to-orange-600 
-                       hover:from-red-500 hover:to-orange-500
-                       text-white rounded-xl text-center font-bold 
-                       shadow-lg hover:shadow-xl hover:shadow-red-500/50
-                       transform hover:scale-105
-                       transition-all duration-200"
-          >
-            📊 Voir sur Cardmarket
-          </a>
-        )}
-        
-                <button 
+      <div className="mt-2.5 flex gap-1.5">
+        <button
           onClick={handleAddToCollection}
-          disabled={!collectionEnabled || isLoading} 
-          title={!isAuthenticated ? "Connectez-vous pour ajouter à la collection" : undefined}
-          className={`w-full py-2.5 text-xs rounded-xl font-bold transition-all duration-200
-                     ${collectionEnabled && !isLoading
-                       ? 'bg-slate-700 hover:bg-slate-600 text-white shadow-lg hover:shadow-xl hover:scale-105' 
-                       : 'bg-slate-800/50 text-slate-500 cursor-not-allowed opacity-50 border border-slate-700/50'}`}
+          disabled={!collectionEnabled || isLoading}
+          title={!isAuthenticated ? 'Connectez-vous pour ajouter à la collection' : undefined}
+          className="flex-1 flex items-center justify-center gap-1 rounded-md bg-slate-800 px-2 py-2 text-xs font-medium text-white
+                     hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? '⏳ Ajout...' : ownedQuantity > 0 ? '+ Ajouter un exemplaire' : '⭐ Ajouter à la collection'}
+          <Plus size={14} />
+          {isLoading ? 'Ajout…' : ownedQuantity > 0 ? 'Exemplaire' : 'Collection'}
         </button>
 
         <button
           onClick={handleTogglePin}
           disabled={isPinLoading}
-          title={!isAuthenticated ? "Connectez-vous pour suivre le prix" : isPinned ? "Retirer du dashboard" : "Suivre le prix sur le dashboard"}
-          className={`w-full py-2.5 text-xs rounded-xl font-bold transition-all duration-200
-                     flex items-center justify-center gap-2
-                     ${isPinned
-                       ? 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white shadow-lg hover:shadow-xl hover:scale-105'
-                       : 'bg-slate-700 hover:bg-slate-600 text-white shadow-lg hover:shadow-xl hover:scale-105'}
-                     ${isPinLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+          aria-pressed={isPinned}
+          title={!isAuthenticated ? 'Connectez-vous pour suivre le prix' : isPinned ? 'Ne plus suivre le prix' : 'Suivre le prix'}
+          aria-label={isPinned ? 'Ne plus suivre le prix' : 'Suivre le prix'}
+          className={`${iconButton} ${isPinned ? iconActive : iconIdle}`}
         >
-          {isPinLoading ? (
-            <>⏳ ...</>
-          ) : isPinned ? (
-            <>
-              <PinOff size={14} /> Ne plus suivre
-            </>
-          ) : (
-            <>
-              <Pin size={14} /> Suivre le prix
-            </>
-          )}
+          {isPinned ? <Pin size={15} fill="currentColor" /> : <Pin size={15} />}
         </button>
+
+        {card.cardmarketUrl && (
+          <a
+            href={card.cardmarketUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Voir sur Cardmarket"
+            aria-label="Voir sur Cardmarket"
+            className={`${iconButton} ${iconIdle}`}
+          >
+            <ExternalLink size={15} />
+          </a>
+        )}
       </div>
     </div>
   );

@@ -38,23 +38,19 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const getIcon = (type: ToastType) => {
     switch (type) {
-      case 'success': return <CheckCircle size={20} />;
-      case 'error': return <AlertCircle size={20} />;
-      case 'warning': return <AlertTriangle size={20} />;
-      default: return <Info size={20} />;
+      case 'success': return <CheckCircle size={18} />;
+      case 'error': return <AlertCircle size={18} />;
+      case 'warning': return <AlertTriangle size={18} />;
+      default: return <Info size={18} />;
     }
   };
 
-  const getStyles = (type: ToastType) => {
+  const getIconColor = (type: ToastType) => {
     switch (type) {
-      case 'success':
-        return 'bg-gradient-to-r from-green-500/90 to-emerald-500/90 border-green-400/50';
-      case 'error':
-        return 'bg-gradient-to-r from-red-500/90 to-rose-500/90 border-red-400/50';
-      case 'warning':
-        return 'bg-gradient-to-r from-orange-500/90 to-amber-500/90 border-orange-400/50';
-      default:
-        return 'bg-gradient-to-r from-blue-500/90 to-cyan-500/90 border-blue-400/50';
+      case 'success': return 'text-emerald-400';
+      case 'error': return 'text-red-400';
+      case 'warning': return 'text-amber-400';
+      default: return 'text-sky-400';
     }
   };
 
@@ -66,19 +62,18 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map(toast => (
           <div
             key={toast.id}
-            className={`${getStyles(toast.type)} text-white px-4 py-3 rounded-xl shadow-2xl 
-                       border-2 backdrop-blur-md pointer-events-auto
-                       animate-in slide-in-from-right-full duration-300
-                       flex items-center gap-3 min-w-[300px]`}
+            role="status"
+            className="bg-slate-900 border border-slate-700 text-slate-100 px-4 py-3 rounded-md shadow-lg
+                       pointer-events-auto flex items-center gap-3 min-w-[280px]"
           >
-            <div className="flex-shrink-0">
+            <div className={`flex-shrink-0 ${getIconColor(toast.type)}`}>
               {getIcon(toast.type)}
             </div>
-            <p className="flex-1 text-sm font-medium">{toast.message}</p>
+            <p className="flex-1 text-sm">{toast.message}</p>
             <button
               onClick={() => removeToast(toast.id)}
-              className="flex-shrink-0 hover:bg-white/20 rounded-lg p-1 transition-colors"
-              aria-label="Close notification"
+              className="flex-shrink-0 text-slate-500 hover:text-white rounded p-1 transition-colors"
+              aria-label="Fermer la notification"
             >
               <X size={16} />
             </button>

@@ -8,28 +8,19 @@ interface Props {
 
 export default function SearchBar({ value, onChange }: Props) {
   return (
-    <div className="relative group">
-      <div className="absolute -inset-1 bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl opacity-0 group-hover:opacity-30 blur-lg transition-opacity duration-300"></div>
-      
-      <div className="relative">
-        <Search 
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/100 group-hover:text-white transition-colors" 
-          size={22} 
-        />
-        <input
-          type="search"
-          aria-label="Rechercher un Pokémon"
-          placeholder="Nom (FR ou EN) ou numéro..."
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full pl-12 pr-4 sm:pr-6 py-3 sm:py-4 bg-slate-800/70 backdrop-blur-md border-2 border-red-500/30 rounded-2xl
-                     focus:ring-4 focus:ring-red-500/40 focus:border-red-400 
-                     hover:border-red-400/50 
-                     transition-all duration-300 
-                     text-white placeholder-white/40 text-base sm:text-lg
-                     shadow-xl hover:shadow-2xl hover:shadow-red-500/20"
-        />
-      </div>
+    <div className="relative">
+      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={18} />
+      <input
+        type="search"
+        aria-label="Rechercher un Pokémon"
+        placeholder="Nom (FR ou EN) ou numéro de Pokédex"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-lg
+                   text-white placeholder-slate-500
+                   focus:outline-none focus:border-slate-600 focus:ring-2 focus:ring-red-500/30
+                   transition-colors"
+      />
     </div>
   );
 }

@@ -39,7 +39,7 @@ export default function DashboardClient({ initialPins }: Props) {
   const [range, setRange] = useState<Range>('30d');
 
   const handleUnpin = async (cardId: string) => {
-    if (!confirm('Retirer cette carte du dashboard ?')) return;
+    if (!confirm('Ne plus suivre le prix de cette carte ?')) return;
     const res = await fetch(`/api/dashboard/pins?cardId=${encodeURIComponent(cardId)}`, {
       method: 'DELETE',
     });
@@ -50,10 +50,10 @@ export default function DashboardClient({ initialPins }: Props) {
 
   if (pins.length === 0) {
     return (
-      <div className="bg-slate-800/40 border border-red-500/20 rounded-2xl p-12 text-center">
-        <p className="text-white text-lg mb-2">Aucune carte épinglée pour l&apos;instant.</p>
-        <p className="text-red-200/70">
-          Épingle une carte depuis la modal d&apos;un Pokémon pour suivre l&apos;évolution de son prix ici.
+      <div className="rounded-lg border border-dashed border-slate-800 p-10 text-center">
+        <p className="text-white font-medium">Aucune carte suivie pour l&apos;instant</p>
+        <p className="text-slate-400 text-sm mt-1">
+          Ouvrez un Pokémon et cliquez sur l&apos;épingle d&apos;une carte pour suivre son prix ici.
         </p>
       </div>
     );
@@ -61,16 +61,16 @@ export default function DashboardClient({ initialPins }: Props) {
 
   return (
     <div>
-      <div className="flex gap-2 mb-6">
+      <div className="inline-flex rounded-md border border-slate-800 p-0.5 mb-6">
         {RANGE_LABELS.map(({ value, label }) => (
           <button
             key={value}
             onClick={() => setRange(value)}
             className={
-              'px-4 py-2 rounded-lg text-sm font-medium transition-colors ' +
+              'px-3 py-1.5 rounded text-sm transition-colors ' +
               (range === value
-                ? 'bg-red-500 text-white'
-                : 'bg-slate-700 text-red-200 hover:bg-slate-600')
+                ? 'bg-slate-800 text-white'
+                : 'text-slate-400 hover:text-white')
             }
           >
             {label}
@@ -78,7 +78,7 @@ export default function DashboardClient({ initialPins }: Props) {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {pins.map(pin => (
           <PinnedCardChart
             key={pin.id}

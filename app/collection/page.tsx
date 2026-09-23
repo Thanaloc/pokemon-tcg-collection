@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
 import { useCollection } from '@/hooks/useCollection';
 import { useDebounce } from '@/hooks/useDebounce';
-import CollectionHeader from '@/components/Collection/CollectionHeader';
+import SiteNav from '@/components/Header/SiteNav';
 import CollectionFilters from '@/components/Collection/CollectionFilters';
 import CollectionCard from '@/components/Collection/CollectionCard';
 import CollectionGroup from '@/components/Collection/CollectionGroup';
@@ -12,10 +11,10 @@ import CollectionEmpty from '@/components/Collection/CollectionEmpty';
 import type { CollectionItem, CollectionSort, CollectionStats } from '@/types';
 
 const PAGE_SIZE = 50;
+const euros = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
 export default function CollectionPage() {
   // The proxy only lets authenticated users reach this page.
-  const { data: session } = useSession();
   const { fetchCollection, updateQuantity, removeFromCollection } = useCollection();
 
   const [collections, setCollections] = useState<CollectionItem[]>([]);
@@ -115,48 +114,49 @@ export default function CollectionPage() {
   const isEmptyCollection = hasLoaded && stats.distinctCards === 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-950 to-slate-900">
-      <CollectionHeader
-        userName={session?.user?.name || ''}
-        userEmail={session?.user?.email || ''}
-        distinctCards={stats.distinctCards}
-        totalCopies={stats.totalCopies}
-        totalValue={stats.totalValue}
-      />
+    <div className="min-h-screen">
+      <SiteNav />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <CollectionFilters
-          searchTerm={searchTerm}
-          onSearchChange={changeSearch}
-          sortBy={sortBy}
-          onSortChange={changeSort}
-        />
+      <main className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
+        <div className="mb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Ma collection</h1>
+            <p className="text-sm text-slate-400 mt-1 tabular-nums">
+              {stats.distinctCards} carte{stats.distinctCards > 1 ? 's' : ''}
+              {' · '}{stats.totalCopies} exemplaire{stats.totalCopies > 1 ? 's' : ''}
+              {' · '}valeur estimée <span className="text-slate-200">{euros.format(stats.totalValue)}</span>
+            </p>
+          </div>
+          <CollectionFilters
+            searchTerm={searchTerm}
+            onSearchChange={changeSearch}
+            sortBy={sortBy}
+            onSortChange={changeSort}
+          />
+        </div>
 
         {loadFailed ? (
-          <div className="bg-red-900/30 border-2 border-red-500/40 rounded-2xl p-8 text-center">
-            <p className="text-red-200 font-semibold text-lg">Impossible de charger la collection.</p>
+          <div className="border border-red-900 bg-red-950/40 rounded-lg p-6 text-center">
+            <p className="text-red-200">Impossible de charger la collection.</p>
             <button
               onClick={() => setReloadKey(k => k + 1)}
-              className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition"
+              className="mt-4 px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 text-white rounded-md transition-colors"
             >
               Réessayer
             </button>
           </div>
         ) : !hasLoaded ? (
-          <div className="flex flex-col items-center justify-center py-24">
-            <div className="animate-spin w-12 h-12 border-4 border-red-500/40 border-t-transparent rounded-full"></div>
-            <p className="text-white mt-4">Chargement de la collection...</p>
+          <div className="flex justify-center py-24">
+            <div className="animate-spin w-8 h-8 border-2 border-slate-700 border-t-red-500 rounded-full" aria-label="Chargement de la collection"></div>
           </div>
         ) : isEmptyCollection ? (
           <CollectionEmpty />
         ) : collections.length === 0 ? (
-          <div className="text-center py-16 bg-slate-800/30 rounded-3xl border border-red-500/10">
-            <p className="text-red-200 text-lg font-medium">Aucune carte ne correspond à « {debouncedSearch} »</p>
-          </div>
+          <p className="text-center text-slate-400 py-16">Aucune carte ne correspond à « {debouncedSearch} ».</p>
         ) : (
           <div className={`transition-opacity ${isFetching ? 'opacity-60' : ''}`}>
             {groupedData ? (
-              <div className="space-y-8">
+              <div className="space-y-10">
                 {[...groupedData.entries()].map(([groupName, items]) => (
                   <CollectionGroup
                     key={groupName}
@@ -168,7 +168,7 @@ export default function CollectionPage() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {collections.map((item) => (
                   <CollectionCard
                     key={item.id}
@@ -184,23 +184,23 @@ export default function CollectionPage() {
         )}
 
         {totalPages > 1 && (
-          <div className="mt-8 flex justify-center gap-2">
+          <div className="mt-8 flex items-center justify-center gap-2 text-sm">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1 || isFetching}
-              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800
-                       disabled:opacity-50 text-white rounded-lg transition-colors"
+              className="px-3 py-1.5 rounded-md border border-slate-800 text-slate-300 hover:text-white hover:border-slate-600
+                       disabled:opacity-40 disabled:hover:border-slate-800 transition-colors"
             >
               Précédent
             </button>
-            <span className="px-4 py-2 bg-slate-800 text-white rounded-lg">
+            <span className="px-3 text-slate-400 tabular-nums">
               Page {page} / {totalPages}
             </span>
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages || isFetching}
-              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800
-                       disabled:opacity-50 text-white rounded-lg transition-colors"
+              className="px-3 py-1.5 rounded-md border border-slate-800 text-slate-300 hover:text-white hover:border-slate-600
+                       disabled:opacity-40 disabled:hover:border-slate-800 transition-colors"
             >
               Suivant
             </button>

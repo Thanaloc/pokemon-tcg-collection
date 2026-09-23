@@ -32,7 +32,7 @@ export async function GET() {
       name: p.card.name,
       number: p.card.number,
       set: p.card.set.name,
-      smallImage: p.card.imageSmallFr || p.card.imageSmallEn || '/placeholder-card.png',
+      smallImage: p.card.imageSmallFr || p.card.imageSmallEn || '/placeholder-card.svg',
       currentPrice: p.card.price?.cardmarketPrice ?? null,
       cardmarketUrl: buildCardmarketUrl({
         name: p.card.name,

@@ -71,7 +71,7 @@ export default function RegisterPage() {
     return (
       <AuthShell title="Vérifiez vos emails">
         <div className="text-center space-y-4">
-          <MailCheck size={48} className="mx-auto text-green-400" />
+          <MailCheck size={36} className="mx-auto text-slate-400" />
           <p className="text-slate-200">
             Un lien de confirmation a été envoyé à{' '}
             <strong className="text-white break-all">{pendingVerification}</strong>.
@@ -95,7 +95,7 @@ export default function RegisterPage() {
       footer={
         <>
           Déjà un compte ?{' '}
-          <Link href="/login" className="text-red-400 hover:text-red-300 font-semibold transition-colors">
+          <Link href="/login" className="text-white hover:underline underline-offset-2 font-medium">
             Se connecter
           </Link>
         </>

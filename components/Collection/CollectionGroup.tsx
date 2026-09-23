@@ -8,28 +8,24 @@ interface Props {
   onRemove: (cardId: string) => void;
 }
 
+const euros = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+
 export default function CollectionGroup({ groupName, items, onUpdateQuantity, onRemove }: Props) {
   const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
   const totalValue = items.reduce((sum, i) => sum + (i.card.price || 0) * i.quantity, 0);
   const hasPrice = items.some(i => i.card.price);
 
   return (
-    <div>
-      <div className="mb-4 pb-3 border-b-2 border-red-500/30">
-        <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">
-          {groupName}
-        </h2>
-        <p className="text-sm text-slate-400 mt-1">
-          {items.length} carte{items.length > 1 ? 's' : ''} • {totalQuantity} exemplaire{totalQuantity > 1 ? 's' : ''}
-          {hasPrice && (
-            <span className="ml-2">
-              • {totalValue.toFixed(2)}€
-            </span>
-          )}
+    <section>
+      <div className="mb-3 flex items-baseline justify-between gap-4 border-b border-slate-800 pb-2">
+        <h2 className="text-lg font-semibold text-white truncate">{groupName}</h2>
+        <p className="text-xs text-slate-500 shrink-0 tabular-nums">
+          {items.length} carte{items.length > 1 ? 's' : ''} · {totalQuantity} ex.
+          {hasPrice && <> · {euros.format(totalValue)}</>}
         </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
         {items.map((item) => (
           <CollectionCard
             key={item.id}
@@ -40,6 +36,6 @@ export default function CollectionGroup({ groupName, items, onUpdateQuantity, on
           />
         ))}
       </div>
-    </div>
+    </section>
   );
 }

@@ -1,4 +1,5 @@
 import { Trash2, Plus, Minus } from 'lucide-react';
+import CardImage from '@/components/ui/CardImage';
 
 interface Props {
   card: {
@@ -18,68 +19,59 @@ interface Props {
   onRemove: (cardId: string) => void;
 }
 
+const euros = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+
+const stepButton = `p-1.5 rounded-md border border-slate-800 text-slate-300
+  hover:text-white hover:border-slate-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed`;
+
 export default function CollectionCard({ card, quantity, onUpdateQuantity, onRemove }: Props) {
   return (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-3 
-                 border border-red-500/20 hover:border-red-400/50 
-                 hover:shadow-2xl hover:shadow-red-500/30
-                 transition-all duration-300 relative group">
-      <img
-        src={card.smallImage}
-        alt={card.name}
-        className="w-full rounded-lg shadow-lg mb-2 border border-red-500/10"
-      />
+    <div className="flex flex-col rounded-lg border border-slate-800 bg-slate-900 p-2.5">
+      <CardImage src={card.smallImage} alt={`${card.name} — ${card.set} #${card.number}`} />
 
-      <div className="text-xs space-y-1">
-        <p className="font-bold text-white truncate text-center">{card.pokemon.name}</p>
-        <p className="text-slate-400 text-xs truncate text-center">{card.set}</p>
-        <p className="text-slate-500 text-xs text-center">#{card.number}</p>
-        
-        {card.price && (
-          <p className="text-green-400 font-bold text-xs text-center">
-            {(card.price * quantity).toFixed(2)}€
-          </p>
-        )}
+      <div className="mt-2.5 flex-1">
+        <p className="text-sm font-medium text-white truncate">{card.pokemon.name}</p>
+        <p className="text-xs text-slate-500 truncate">{card.set} · #{card.number}</p>
+        <p className="text-sm text-slate-200 tabular-nums mt-1">
+          {card.price != null ? (
+            <>
+              {euros.format(card.price * quantity)}
+              {quantity > 1 && <span className="text-xs text-slate-500"> ({euros.format(card.price)} ×{quantity})</span>}
+            </>
+          ) : (
+            <span className="text-slate-600">Prix inconnu</span>
+          )}
+        </p>
       </div>
 
-      <div className="mt-2 flex items-center gap-1">
+      <div className="mt-2.5 flex items-center gap-1.5">
         <button
           onClick={() => onUpdateQuantity(card.id, quantity, -1)}
           disabled={quantity <= 1}
-          className="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 
-                   disabled:opacity-50 disabled:cursor-not-allowed
-                   text-white rounded-lg transition-all duration-200
-                   hover:shadow-lg hover:scale-105
-                   flex items-center justify-center text-xs"
+          aria-label="Retirer un exemplaire"
+          className={stepButton}
         >
           <Minus size={14} />
         </button>
-        
-        <div className="px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg">
-          <span className="text-white font-bold text-xs">{quantity}</span>
-        </div>
-        
+        <span className="flex-1 text-center text-sm font-medium text-white tabular-nums" aria-label="Quantité">
+          {quantity}
+        </span>
         <button
           onClick={() => onUpdateQuantity(card.id, quantity, 1)}
-          className="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 
-                   text-white rounded-lg transition-all duration-200
-                   hover:shadow-lg hover:scale-105
-                   flex items-center justify-center text-xs"
+          aria-label="Ajouter un exemplaire"
+          className={stepButton}
         >
           <Plus size={14} />
         </button>
+        <button
+          onClick={() => onRemove(card.id)}
+          aria-label="Retirer de la collection"
+          title="Retirer de la collection"
+          className="p-1.5 rounded-md text-slate-500 hover:text-red-400 transition-colors"
+        >
+          <Trash2 size={14} />
+        </button>
       </div>
-
-      <button
-        onClick={() => onRemove(card.id)}
-        className="mt-2 w-full py-1.5 bg-red-600/20 hover:bg-red-600/40 
-                 text-red-400 rounded-lg transition-all duration-200
-                 hover:shadow-lg hover:scale-105
-                 flex items-center justify-center gap-1 text-xs"
-      >
-        <Trash2 size={12} />
-        Retirer
-      </button>
     </div>
   );
 }

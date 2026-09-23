@@ -7,9 +7,8 @@ import { useToast } from '@/app/contexts/ToastContext';
 import { Alert, Field, PasswordField, Spinner, inputClass } from '@/components/Auth/AuthUI';
 import { PASSWORD_MIN_LENGTH } from '@/lib/validation/password-rules';
 
-const buttonClass = `px-5 py-2.5 rounded-xl font-bold text-sm text-white
-  bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500
-  disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200`;
+const buttonClass = `px-4 py-2 rounded-md font-medium text-sm text-white
+  bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors`;
 
 function Section({ title, description, children, danger = false }: {
   title: string;
@@ -18,8 +17,8 @@ function Section({ title, description, children, danger = false }: {
   danger?: boolean;
 }) {
   return (
-    <section className={`rounded-2xl border p-5 sm:p-6 backdrop-blur-xl ${danger ? 'bg-red-950/30 border-red-500/40' : 'bg-slate-800/60 border-red-500/20'}`}>
-      <h2 className={`text-lg font-bold ${danger ? 'text-red-300' : 'text-white'}`}>{title}</h2>
+    <section className={`rounded-lg border p-5 sm:p-6 ${danger ? 'bg-red-950/20 border-red-900/60' : 'bg-slate-900 border-slate-800'}`}>
+      <h2 className={`text-base font-semibold ${danger ? 'text-red-300' : 'text-white'}`}>{title}</h2>
       {description && <p className="text-slate-400 text-sm mt-1">{description}</p>}
       <div className="mt-5">{children}</div>
     </section>
@@ -65,8 +64,8 @@ function ProfileForm({ email, initialName }: { email: string; initialName: strin
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <p className="block text-sm font-medium text-slate-300 mb-2">Email</p>
-        <p className="text-white bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3 break-all">{email}</p>
+        <p className="block text-sm text-slate-300 mb-1.5">Email</p>
+        <p className="text-slate-300 text-sm break-all">{email}</p>
       </div>
       <Field id="name" label="Nom affiché" icon={UserIcon}>
         <input
@@ -159,7 +158,7 @@ function DeleteAccountForm() {
       <button
         type="submit"
         disabled={deleting || !confirmed || !password}
-        className="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-red-700 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+        className="px-4 py-2 rounded-md font-medium text-sm text-white bg-red-700 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
       >
         <Trash2 size={16} />
         {deleting ? 'Suppression...' : 'Supprimer mon compte'}
@@ -182,7 +181,7 @@ export default function AccountClient({ email, initialName }: { email: string; i
       <Section title="Mes données" description="Téléchargez tout ce que nous stockons sur vous : compte, collection et cartes suivies (format JSON).">
         <a
           href="/api/account/export"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-slate-700 hover:bg-slate-600 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm text-white bg-slate-800 hover:bg-slate-700 transition-colors"
         >
           <Download size={16} />
           Exporter mes données

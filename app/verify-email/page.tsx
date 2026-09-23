@@ -33,7 +33,7 @@ export default async function VerifyEmailPage({
       </p>
       <Link
         href="/login"
-        className="mt-6 block text-center text-red-400 hover:text-red-300 font-semibold transition-colors"
+        className="mt-6 block text-center text-white hover:underline underline-offset-2 font-medium"
       >
         Aller à la connexion
       </Link>

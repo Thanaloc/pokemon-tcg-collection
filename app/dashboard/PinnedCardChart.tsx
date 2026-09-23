@@ -11,6 +11,9 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { X, AlertTriangle, ExternalLink } from 'lucide-react';
+import CardImage from '@/components/ui/CardImage';
+
+const euros = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
 type HistoryPoint = {
   snapshotAt: string;
@@ -76,7 +79,7 @@ export default function PinnedCardChart({ pin, range, onUnpin }: Props) {
   }));
 
   return (
-    <div className="bg-slate-800/40 border border-red-500/20 rounded-2xl p-4">
+    <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
       <div className="flex items-start gap-4 mb-4">
         <a
           href={pin.card.cardmarketUrl}
@@ -85,26 +88,22 @@ export default function PinnedCardChart({ pin, range, onUnpin }: Props) {
           className="flex items-start gap-4 flex-1 min-w-0 group"
           title="Voir sur Cardmarket (cartes FR)"
         >
-          <img
-            src={pin.card.smallImage}
-            alt={pin.card.name}
-            className="w-16 h-22 object-contain rounded-lg flex-shrink-0 group-hover:scale-105 transition-transform"
-          />
+          <div className="w-14 shrink-0">
+            <CardImage src={pin.card.smallImage} alt={pin.card.name} />
+          </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-white font-bold truncate flex items-center gap-1.5 group-hover:text-red-200 transition-colors">
+            <h3 className="text-white font-medium truncate flex items-center gap-1.5 group-hover:underline underline-offset-2">
               <span className="truncate">{pin.card.name}</span>
               <ExternalLink size={12} className="opacity-0 group-hover:opacity-70 transition-opacity flex-shrink-0" />
             </h3>
-            <p className="text-red-200/70 text-sm truncate">
+            <p className="text-slate-500 text-sm truncate">
               {pin.card.set} · #{pin.card.number}
             </p>
-            <p className="text-white text-lg font-black mt-1">
-              {pin.card.currentPrice != null
-                ? `${pin.card.currentPrice.toFixed(2)} €`
-                : '—'}
+            <p className="text-white text-lg font-semibold mt-1 tabular-nums">
+              {pin.card.currentPrice != null ? euros.format(pin.card.currentPrice) : '—'}
             </p>
             {hasLowConfidence && (
-              <div className="flex items-center gap-1 text-orange-400 text-xs mt-1">
+              <div className="flex items-center gap-1 text-amber-400 text-xs mt-1">
                 <AlertTriangle size={12} />
                 <span>Prix possiblement imprécis</span>
               </div>
@@ -113,8 +112,9 @@ export default function PinnedCardChart({ pin, range, onUnpin }: Props) {
         </a>
         <button
           onClick={onUnpin}
-          className="text-red-300 hover:text-red-100 transition-colors p-1"
-          title="Retirer du dashboard"
+          className="text-slate-500 hover:text-white transition-colors p-1"
+          title="Ne plus suivre"
+          aria-label="Ne plus suivre"
         >
           <X size={18} />
         </button>
@@ -122,7 +122,7 @@ export default function PinnedCardChart({ pin, range, onUnpin }: Props) {
 
       <div className="h-48">
         {isLoading ? (
-          <div className="h-full flex items-center justify-center text-red-200/60 text-sm">
+          <div className="h-full flex items-center justify-center text-slate-500 text-sm">
             Chargement…
           </div>
         ) : error ? (
@@ -130,29 +130,30 @@ export default function PinnedCardChart({ pin, range, onUnpin }: Props) {
             Erreur : {error}
           </div>
         ) : chartData.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-red-200/60 text-sm">
-            Pas encore d&apos;historique. Reviens demain après le cron de snapshot.
+          <div className="h-full flex items-center justify-center text-slate-500 text-sm">
+            Pas encore d&apos;historique : le premier relevé arrive demain.
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
-              <XAxis dataKey="date" stroke="#fca5a5" fontSize={11} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+              <XAxis dataKey="date" stroke="#64748b" fontSize={11} />
               <YAxis
-                stroke="#fca5a5"
+                stroke="#64748b"
                 fontSize={11}
                 tickFormatter={(v: number) => `${v.toFixed(0)}€`}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1e293b',
-                  border: '1px solid #ef4444',
-                  borderRadius: '8px',
+                  backgroundColor: '#0f172a',
+                  border: '1px solid #334155',
+                  borderRadius: '6px',
+                  fontSize: 12,
                 }}
-                labelStyle={{ color: '#fca5a5' }}
+                labelStyle={{ color: '#94a3b8' }}
                 formatter={(value) => {
                   const num = typeof value === 'number' ? value : Number(value);
-                  return [Number.isFinite(num) ? `${num.toFixed(2)} €` : '—', 'Prix'];
+                  return [Number.isFinite(num) ? euros.format(num) : '—', 'Prix'];
                 }}
               />
               <Line
@@ -160,8 +161,8 @@ export default function PinnedCardChart({ pin, range, onUnpin }: Props) {
                 dataKey="price"
                 stroke="#ef4444"
                 strokeWidth={2}
-                dot={{ r: 3, fill: '#ef4444' }}
-                activeDot={{ r: 5 }}
+                dot={false}
+                activeDot={{ r: 4 }}
               />
             </LineChart>
           </ResponsiveContainer>

@@ -4,7 +4,7 @@ import { usePokemonCards } from '@/hooks/usePokemonCards';
 import CardFilters from './CardFilters';
 import CardGrid from './CardGrid';
 import { rarityRank } from '@/constants/rarities';
-import { Filter, Grid3x3, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 const COLLECTION_ENABLED = true;
 
@@ -216,71 +216,47 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
 
     if (!pokemon) return null;
 
+    const resetFilters = () => {
+        setCardSearchTerm('');
+        setFilterRarity('all');
+        setFilterSeries('all');
+        setSortBy('rarity');
+    };
+
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-black/70"
             onClick={onClose}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
         >
             <div
-                className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl w-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl border border-red-500/20 overflow-hidden"
+                className="bg-slate-950 rounded-xl w-full max-w-6xl max-h-[92vh] flex flex-col border border-slate-800 shadow-2xl overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="relative px-4 sm:px-6 py-6 sm:py-12 border-b border-red-500/20 bg-gradient-to-r from-slate-900/95 via-red-900/60 to-slate-900/95 backdrop-blur-xl flex-shrink-0 rounded-t-3xl">
-
-                    <div className="absolute inset-0 opacity-[0.12]" style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 0l34.64 20v40L40 80 5.36 60V20z' fill='none' stroke='%23ef4444' stroke-width='1.5'/%3E%3C/svg%3E")`,
-                        backgroundSize: "70px 70px",
-                        maskImage: "linear-gradient(to bottom, transparent, black, black, transparent)"
-                    }}></div>
-
-                    <div className="absolute -top-20 -left-28 w-80 h-80 bg-red-500/20 blur-[100px] rounded-full pointer-events-none"></div>
-                    <div className="absolute top-32 right-0 w-96 h-96 bg-orange-500/10 blur-[120px] rounded-full pointer-events-none"></div>
-
-                    <div className="max-w-7xl mx-auto relative z-10">
-                        <div className="flex items-center justify-between gap-6">
-
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 sm:w-20 sm:h-20 flex-shrink-0 bg-slate-800/50 rounded-2xl p-2 border-2 border-red-500/40 shadow-xl">
-                                    <img
-                                        src={pokemon.imageUrl}
-                                        alt={pokemon.name}
-                                        className="w-full h-full object-contain drop-shadow-lg"
-                                    />
-                                </div>
-
-                                <div>
-                                    <h2
-                                        id="modal-title"
-                                        className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-red-500 to-orange-400 drop-shadow-lg"
-                                    >
-                                        {pokemon.name}
-                                    </h2>
-                                    {!isLoading && (
-                                        <p className="text-sm text-red-200/80 mt-1 font-medium">
-                                            <strong className="text-white">{cards.length}</strong> cartes disponibles
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={onClose}
-                                aria-label="Fermer la modal"
-                                className="p-3 rounded-xl
-                     bg-slate-800/80 hover:bg-red-900/30
-                     border-2 border-red-500/30 hover:border-red-400/60
-                     text-red-300 hover:text-red-200
-                     backdrop-blur-md
-                     transition-all duration-200
-                     shadow-lg hover:shadow-red-500/30"
-                            >
-                                <X size={24} />
-                            </button>
+                <div className="flex items-center justify-between gap-4 px-4 sm:px-6 py-4 border-b border-slate-800">
+                    <div className="flex items-center gap-3 min-w-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element -- PokeAPI artwork */}
+                        <img src={pokemon.imageUrl} alt="" className="w-12 h-12 object-contain shrink-0" onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
+                        <div className="min-w-0">
+                            <p className="text-xs text-slate-500 tabular-nums">#{pokemon.number}</p>
+                            <h2 id="modal-title" className="text-xl font-bold text-white truncate">{pokemon.name}</h2>
                         </div>
+                        {!isLoading && (
+                            <span className="ml-2 text-sm text-slate-400 shrink-0">
+                                {cards.length} carte{cards.length > 1 ? 's' : ''}
+                            </span>
+                        )}
                     </div>
+
+                    <button
+                        onClick={onClose}
+                        aria-label="Fermer"
+                        className="p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                    >
+                        <X size={20} />
+                    </button>
                 </div>
 
                 <div className="p-3 sm:p-6 overflow-y-auto flex-1 min-h-0 custom-scrollbar">
@@ -297,16 +273,11 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                                 onFilterSeries={setFilterSeries}
                                 uniqueRarities={uniqueRarities}
                                 uniqueSeries={uniqueSeries}
-                                onReset={() => {
-                                    setCardSearchTerm('');
-                                    setFilterRarity('all');
-                                    setFilterSeries('all');
-                                    setSortBy('rarity');
-                                }}
+                                onReset={resetFilters}
                             />
 
                             {filteredSorted.length > 0 ? (
-                                <div className="mt-6">
+                                <div className="mt-5">
                                     <CardGrid
                                         cards={filteredSorted}
                                         cardsWithMultipleRarities={cardsWithMultipleRarities}
@@ -320,38 +291,22 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                                 </div>
                             ) : (
                                 <div className="text-center py-16">
-                                    <Filter size={48} className="mx-auto text-red-500/40 mb-4" />
-                                    <p className="text-red-200">Aucune carte ne correspond aux filtres</p>
+                                    <p className="text-slate-400">Aucune carte ne correspond aux filtres.</p>
                                     <button
-                                        onClick={() => {
-                                            setCardSearchTerm('');
-                                            setFilterRarity('all');
-                                            setFilterSeries('all');
-                                            setSortBy('rarity');
-                                        }}
-                                        className="mt-6 px-6 py-3 
-                               bg-gradient-to-r from-red-600 to-orange-600 
-                               hover:from-red-500 hover:to-orange-500
-                               text-white rounded-xl font-bold
-                               shadow-lg hover:shadow-xl hover:shadow-red-500/50
-                               transform hover:scale-105
-                               transition-all duration-200"
+                                        onClick={resetFilters}
+                                        className="mt-4 px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 text-white rounded-md transition-colors"
                                     >
-                                        🔄 Réinitialiser les filtres
+                                        Réinitialiser les filtres
                                     </button>
                                 </div>
                             )}
                         </>
                     ) : isLoading ? (
-                        <div className="flex flex-col items-center justify-center py-24">
-                            <div className="animate-spin w-12 h-12 border-4 border-red-500/40 border-t-transparent rounded-full"></div>
-                            <p className="text-white mt-4">Chargement des cartes...</p>
+                        <div className="flex justify-center py-24">
+                            <div className="animate-spin w-8 h-8 border-2 border-slate-700 border-t-red-500 rounded-full" aria-label="Chargement des cartes"></div>
                         </div>
                     ) : (
-                        <div className="text-center py-16">
-                            <Grid3x3 size={48} className="mx-auto text-red-500/40 mb-4" />
-                            <p className="text-red-200">Aucune carte trouvée pour ce Pokémon</p>
-                        </div>
+                        <p className="text-center text-slate-400 py-16">Aucune carte trouvée pour ce Pokémon.</p>
                     )}
                 </div>
             </div>

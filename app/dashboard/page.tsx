@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import DashboardClient from './DashboardClient';
-import DashboardHeader from '@/components/Dashboard/DashboardHeader';
+import SiteNav from '@/components/Header/SiteNav';
 import { buildCardmarketUrl } from '@/lib/cardmarket';
 
 export const dynamic = 'force-dynamic';
@@ -33,8 +33,8 @@ export default async function DashboardPage() {
       name: p.card.name,
       number: p.card.number,
       rarity: p.card.rarity,
-      image: p.card.imageFr || p.card.imageEn || '/placeholder-card.png',
-      smallImage: p.card.imageSmallFr || p.card.imageSmallEn || '/placeholder-card.png',
+      image: p.card.imageFr || p.card.imageEn || '/placeholder-card.svg',
+      smallImage: p.card.imageSmallFr || p.card.imageSmallEn || '/placeholder-card.svg',
       set: p.card.set.name,
       series: p.card.set.series,
       currentPrice: p.card.price?.cardmarketPrice ?? null,
@@ -49,14 +49,14 @@ export default async function DashboardPage() {
     },
   }));
 
-   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-950 to-slate-900">
-      <DashboardHeader
-        userName={session.user.name || ''}
-        userEmail={session.user.email || ''}
-        pinnedCount={formattedPins.length}
-      />
-      <main className="max-w-7xl mx-auto px-4 py-8">
+  return (
+    <div className="min-h-screen">
+      <SiteNav />
+      <main className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
+        <h1 className="text-2xl font-bold text-white">Suivi des prix</h1>
+        <p className="text-sm text-slate-400 mt-1 mb-6">
+          Évolution du prix Cardmarket des cartes que vous suivez, relevé chaque jour.
+        </p>
         <DashboardClient initialPins={formattedPins} />
       </main>
     </div>

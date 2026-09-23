@@ -1,6 +1,5 @@
 import React from 'react';
 import type { Pokemon } from '@/types';
-import { TYPE_COLORS } from '@/constants/colors';
 
 interface Props {
   pokemon: Pokemon;
@@ -8,59 +7,32 @@ interface Props {
 }
 
 export default React.memo(function PokemonItem({ pokemon, onSelect }: Props) {
-    
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onSelect(pokemon);
-    }
-  };
+  const count = pokemon.cardCount;
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
       onClick={() => onSelect(pokemon)}
-      onKeyDown={handleKeyDown}
       aria-label={`Voir les cartes de ${pokemon.name}`}
-      className="relative rounded-2xl shadow-2xl hover:shadow-red-500/50 transition-all duration-300 cursor-pointer transform hover:scale-105 hover:rotate-2 p-4 border border-red-500/20 hover:border-red-400/60 group overflow-hidden bg-gradient-to-br from-slate-800/90 to-slate-900/90 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+      className="group text-left rounded-lg border border-slate-800 bg-slate-900 p-3
+                 hover:border-slate-600 hover:bg-slate-800/60 transition-colors
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
     >
-      {/* Effets visuels */}
-      <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-      <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br from-red-500/20 to-orange-500/20 blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
-
-      <img 
-        src={pokemon.imageUrl} 
-        alt={pokemon.name} 
-        className="w-full h-28 object-contain mb-3" 
-        loading="lazy" 
+      {/* eslint-disable-next-line @next/next/no-img-element -- PokeAPI artwork */}
+      <img
+        src={pokemon.imageUrl}
+        alt=""
+        className="w-full h-24 object-contain mb-2"
+        loading="lazy"
+        onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }}
       />
-      
-      <div className="text-center relative z-10">
-        <p className="text-xs text-red-300 font-mono inline-block px-3 py-1 rounded-full mb-2 border border-red-500/10">
-          #{pokemon.number}
+      <p className="text-xs text-slate-500 tabular-nums">#{pokemon.number}</p>
+      <p className="font-medium text-white truncate">{pokemon.name}</p>
+      {count !== undefined && (
+        <p className={`text-xs mt-0.5 ${count > 0 ? 'text-slate-400' : 'text-slate-600'}`}>
+          {count > 0 ? `${count} carte${count > 1 ? 's' : ''}` : 'Aucune carte'}
         </p>
-        <h3 className="font-semibold text-white text-base mb-1">
-          {pokemon.name}
-        </h3>
-        {pokemon.cardCount !== undefined && (
-          <p className={`text-xs mb-2 ${pokemon.cardCount > 0 ? 'text-red-200/70' : 'text-slate-500'}`}>
-            {pokemon.cardCount > 0
-              ? `${pokemon.cardCount} carte${pokemon.cardCount > 1 ? 's' : ''}`
-              : 'Aucune carte'}
-          </p>
-        )}
-        <div className="flex justify-center gap-2 flex-wrap">
-          {pokemon.types.slice(0, 2).map((t, i) => (
-            <span 
-              key={i} 
-              className={`text-xs px-2 py-1 rounded-lg font-semibold ${TYPE_COLORS[t] || 'bg-gray-100'}`}
-            >
-              {t}
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
+      )}
+    </button>
   );
 });

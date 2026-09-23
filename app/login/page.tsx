@@ -83,7 +83,7 @@ function LoginForm() {
       footer={
         <>
           Pas encore de compte ?{' '}
-          <Link href="/register" className="text-red-400 hover:text-red-300 font-semibold transition-colors">
+          <Link href="/register" className="text-white hover:underline underline-offset-2 font-medium">
             Créer un compte
           </Link>
         </>
@@ -133,7 +133,7 @@ function LoginForm() {
             autoComplete="current-password"
           />
           <div className="mt-2 text-right">
-            <Link href="/forgot-password" className="text-xs text-slate-400 hover:text-red-300 transition-colors">
+            <Link href="/forgot-password" className="text-xs text-slate-400 hover:text-white transition-colors">
               Mot de passe oublié ?
             </Link>
           </div>
@@ -150,9 +150,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-950 to-slate-900 flex items-center justify-center">
-        <div className="text-white">Chargement...</div>
-      </div>
+      <div className="min-h-screen" />
     }>
       <LoginForm />
     </Suspense>
