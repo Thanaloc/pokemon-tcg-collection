@@ -9,7 +9,8 @@
     "lint": "eslint",
     "seed": "tsx scripts/seed-database.ts",
     "update": "tsx scripts/update-database.ts",
-    "cleanup:pocket": "tsx scripts/remove-pocket-sets.ts"
+    "cleanup:pocket": "tsx scripts/remove-pocket-sets.ts",
+    "rarities": "tsx scripts/list-rarities.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.2.0",

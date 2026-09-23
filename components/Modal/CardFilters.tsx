@@ -72,6 +72,8 @@ export default function CardFilters({
             <option value="rarity" className="bg-slate-800">Par Rareté</option>
             <option value="number" className="bg-slate-800">Par Numéro</option>
             <option value="price" className="bg-slate-800">Par Prix</option>
+            <option value="date-desc" className="bg-slate-800">Sortie : plus récentes</option>
+            <option value="date-asc" className="bg-slate-800">Sortie : plus anciennes</option>
           </select>
         </div>
 

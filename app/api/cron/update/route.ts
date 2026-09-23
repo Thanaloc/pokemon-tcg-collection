@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { rejectUnauthorizedCron } from '@/lib/cron';
 import { refreshPrices, syncCatalog } from '@/lib/tcgdex/sync';
+import { rarityReport } from '@/lib/rarities-report';
 
 // The previous version walked every set and fetched every card (~20k requests)
 // in one invocation, oldest sets first: Vercel killed it long before it reached
@@ -26,12 +27,17 @@ export async function GET(request: Request) {
     const prices = await refreshPrices(prisma, { deadline: startedAt + TOTAL_BUDGET_MS });
     console.log('💰 Price refresh done', prices);
 
+    // New TCGdex rarities show up here until they are added to constants/rarities.ts.
+    const unknownRarities = (await rarityReport(prisma)).filter(r => !r.known).map(r => r.rarity);
+    if (unknownRarities.length > 0) console.warn('🆕 Unknown rarities:', unknownRarities);
+
     return NextResponse.json({
       success: true,
       partial: catalog.setsPending > 0,
       durationMs: Date.now() - startedAt,
       catalog,
       prices,
+      unknownRarities,
     });
   } catch (error) {
     console.error('❌ Update failed:', error);

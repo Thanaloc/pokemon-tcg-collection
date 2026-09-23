@@ -32,6 +32,7 @@ export async function GET(request: Request) {
       smallImage: card.imageSmallFr || card.imageSmallEn || '/placeholder-card.png',
       number: card.number,
       series: card.set.series,
+      releaseDate: card.set.releaseDate.toISOString(),
       price: card.price?.cardmarketPrice ?? null,
       cardmarketUrl: buildCardmarketUrl({ name: card.name, number: card.number }),
     }));

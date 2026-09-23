@@ -30,7 +30,8 @@ export function usePokemonCards() {
       const data = await requestDeduplicator.dedupe(
         `pokemon-cards-${pokemonId}`,
         async () => {
-          const url = `/api/cards?pokemonId=${pokemonId}`;
+          // `v` changes whenever the response shape changes, to bypass CDN-cached copies.
+          const url = `/api/cards?pokemonId=${pokemonId}&v=2`;
           return fetchJson(url);
         }
       );

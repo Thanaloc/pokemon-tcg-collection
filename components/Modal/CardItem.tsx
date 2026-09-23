@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import type { Card } from '@/types';
-import { RARITY_COLORS } from '@/constants/colors';
+import { rarityClass } from '@/constants/rarities';
 import { AlertTriangle, Pin, PinOff } from 'lucide-react';
 import { useCollection } from '@/hooks/useCollection';
 
@@ -90,7 +90,7 @@ export default function CardItem({
       <div className="text-sm space-y-2 relative z-10">
         <p className="font-bold text-white truncate text-center">{card.set}</p>
         <div className="flex justify-center mt-1">
-          <span className={`inline-block text-xs px-3 py-1.5 rounded-lg font-bold shadow-md ${RARITY_COLORS[card.rarity] || 'bg-gray-100'}`}>
+          <span className={`inline-block text-xs px-3 py-1.5 rounded-lg font-bold shadow-md ${rarityClass(card.rarity)}`}>
             {card.rarity}
           </span>
         </div>

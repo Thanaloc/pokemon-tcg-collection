@@ -3,10 +3,21 @@ import type { Pokemon, SortOption } from '@/types';
 import { usePokemonCards } from '@/hooks/usePokemonCards';
 import CardFilters from './CardFilters';
 import CardGrid from './CardGrid';
-import { RARITY_ORDER } from '@/constants/rarityOrder';
+import { rarityRank } from '@/constants/rarities';
 import { Filter, Grid3x3, X } from 'lucide-react';
 
 const COLLECTION_ENABLED = true;
+
+// Card numbers can be "001", "TG01", "SV01", "RC02"... Pure integers sort
+// numerically and first, codes use a natural string compare so they group.
+function compareCardNumbers(a: string, b: string): number {
+    const aIsNum = /^\d+$/.test(a);
+    const bIsNum = /^\d+$/.test(b);
+    if (aIsNum && bIsNum) return Number(a) - Number(b);
+    if (aIsNum) return -1;
+    if (bIsNum) return 1;
+    return a.localeCompare(b, undefined, { numeric: true });
+}
 
 interface Props {
     pokemon: Pokemon | null;
@@ -183,35 +194,21 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
             result = result.filter(c => c.series === filterSeries);
         }
 
-                if (sortBy === 'rarity') {
-            const rarityIndex = new Map(RARITY_ORDER.map((r, i) => [r, i]));
-            result.sort((a, b) => {
-                const indexA = rarityIndex.get(a.rarity) ?? 999;
-                const indexB = rarityIndex.get(b.rarity) ?? 999;
-                return indexB - indexA;
-            });
+        if (sortBy === 'rarity') {
+            result.sort((a, b) => rarityRank(b.rarity) - rarityRank(a.rarity));
         } else if (sortBy === 'price') {
-            result.sort((a, b) => {
-                const priceA = a.price ?? 0;
-                const priceB = b.price ?? 0;
-                return priceB - priceA;
-            });
+            result.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
         } else if (sortBy === 'set') {
             result.sort((a, b) => a.set.localeCompare(b.set));
         } else if (sortBy === 'number') {
-            // Card numbers can be "001", "TG01", "SV01", "RC02"... Sort numerically
-            // when both sides are pure integers, otherwise fall back to natural
-            // string compare so codes group together.
-            result.sort((a, b) => {
-                const numA = parseInt(a.number, 10);
-                const numB = parseInt(b.number, 10);
-                const aIsNum = !Number.isNaN(numA) && /^\d+$/.test(a.number);
-                const bIsNum = !Number.isNaN(numB) && /^\d+$/.test(b.number);
-                if (aIsNum && bIsNum) return numA - numB;
-                if (aIsNum) return -1;
-                if (bIsNum) return 1;
-                return a.number.localeCompare(b.number, undefined, { numeric: true });
-            });
+            result.sort((a, b) => compareCardNumbers(a.number, b.number));
+        } else if (sortBy === 'date-asc' || sortBy === 'date-desc') {
+            const direction = sortBy === 'date-asc' ? 1 : -1;
+            result.sort((a, b) =>
+                direction * (Date.parse(a.releaseDate) - Date.parse(b.releaseDate)) ||
+                a.set.localeCompare(b.set) ||
+                compareCardNumbers(a.number, b.number)
+            );
         }
 
         return result;

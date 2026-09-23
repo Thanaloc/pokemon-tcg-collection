@@ -25,6 +25,7 @@ switch on once `RESEND_API_KEY` is set; before that, signup behaves as it always
 | `/api/cron/update` (daily, 03:00 UTC) | New sets/cards, set metadata, then refreshes the prices checked the longest ago until the time budget is spent. Each run resumes where the previous one stopped. |
 | `/api/cron/snapshot-prices` (daily, 05:00 UTC) | Price history for pinned cards (dashboard charts). |
 | `npm run update` | Same as the cron without time limit. `-- --no-prices` for the catalogue only, `-- --all-prices` to refresh every price. |
+| `npm run rarities` | Lists rarities in the database and flags those missing from `constants/rarities.ts` (the cron also returns them as `unknownRarities`). |
 | `npm run cleanup:pocket` | Lists Pokémon TCG Pocket sets present in the database; `-- --apply` deletes them. |
 
 Trigger the cron by hand: `curl -H "Authorization: Bearer $CRON_SECRET" https://<host>/api/cron/update`.

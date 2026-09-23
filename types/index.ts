@@ -1,5 +1,5 @@
 
-export type SortOption = 'set' | 'rarity' | 'number' | 'price';
+export type SortOption = 'set' | 'rarity' | 'number' | 'price' | 'date-desc' | 'date-asc';
 
 export interface Pokemon {
   id: number;
@@ -20,6 +20,8 @@ export interface Card {
   smallImage: string;
   number: string;
   series: string;
+  /** Set release date (ISO). */
+  releaseDate: string;
   price: number | null;
   cardmarketUrl: string | null;
 }
