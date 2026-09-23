@@ -25,7 +25,7 @@ export default async function DashboardPage() {
     orderBy: { pinnedAt: 'desc' },
   });
 
-    const formattedPins = pins.map((p: any) => ({
+    const formattedPins = pins.map(p => ({
     id: p.id,
     pinnedAt: p.pinnedAt.toISOString(),
     card: {
@@ -37,7 +37,7 @@ export default async function DashboardPage() {
       smallImage: p.card.imageSmallFr || p.card.imageSmallEn || '/placeholder-card.png',
       set: p.card.set.name,
       series: p.card.set.series,
-      currentPrice: p.card.price?.cardmarketPrice || null,
+      currentPrice: p.card.price?.cardmarketPrice ?? null,
       cardmarketUrl: buildCardmarketUrl({
         name: p.card.name,
         number: p.card.number,

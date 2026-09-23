@@ -1,33 +1,13 @@
 import { useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useToast } from '@/app/contexts/ToastContext';
+import type { CollectionResponse, CollectionSort } from '@/types';
 
-interface CollectionItem {
-  id: number;
-  quantity: number;
-  addedAt: string;
-  card: {
-    id: string;
-    name: string;
-    number: string;
-    rarity: string;
-    image: string;
-    smallImage: string;
-    set: string;
-    series: string;
-    price: number | null;
-    pokemon: {
-      id: number;
-      name: string;
-    };
-  };
-}
-
-interface CollectionResponse {
-  collections: CollectionItem[];
-  total: number;
-  page: number;
-  totalPages: number;
+async function request(url: string, init?: RequestInit) {
+  const response = await fetch(url, init);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || 'Une erreur est survenue');
+  return data;
 }
 
 export function useCollection() {
@@ -37,28 +17,21 @@ export function useCollection() {
 
   const addToCollection = useCallback(async (cardId: string) => {
     if (!session?.user) {
-      showToast('You must be logged in to add cards', 'error');
+      showToast('Connectez-vous pour ajouter des cartes', 'error');
       return false;
     }
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/collection/add', {
+      await request('/api/collection/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cardId }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to add card');
-      }
-
-      showToast('Card added to collection', 'success');
+      showToast('Carte ajoutée à la collection', 'success');
       return true;
-    } catch (error: any) {
-      showToast(error.message || 'Error adding card', 'error');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Erreur lors de l'ajout", 'error');
       return false;
     } finally {
       setIsLoading(false);
@@ -66,90 +39,49 @@ export function useCollection() {
   }, [session, showToast]);
 
   const updateQuantity = useCallback(async (cardId: string, quantity: number) => {
-    if (!session?.user) {
-      showToast('You must be logged in', 'error');
-      return false;
-    }
-
-    if (quantity < 1) {
-      showToast('Quantity must be at least 1', 'error');
-      return false;
-    }
-
-    setIsLoading(true);
     try {
-      const response = await fetch('/api/collection/update', {
+      await request('/api/collection/update', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cardId, quantity }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update quantity');
-      }
-
-      showToast('Quantity updated', 'success');
       return true;
-    } catch (error: any) {
-      showToast(error.message || 'Error updating quantity', 'error');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Erreur lors de la mise à jour', 'error');
       return false;
-    } finally {
-      setIsLoading(false);
     }
-  }, [session, showToast]);
+  }, [showToast]);
 
   const removeFromCollection = useCallback(async (cardId: string) => {
-    if (!session?.user) {
-      showToast('You must be logged in', 'error');
-      return false;
-    }
-
-    setIsLoading(true);
     try {
-      const response = await fetch(`/api/collection/remove?cardId=${cardId}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to remove card');
-      }
-
-      showToast('Card removed from collection', 'success');
+      await request(`/api/collection/remove?cardId=${encodeURIComponent(cardId)}`, { method: 'DELETE' });
+      showToast('Carte retirée de la collection', 'success');
       return true;
-    } catch (error: any) {
-      showToast(error.message || 'Error removing card', 'error');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Erreur lors du retrait', 'error');
       return false;
-    } finally {
-      setIsLoading(false);
     }
-  }, [session, showToast]);
+  }, [showToast]);
 
-  const fetchCollection = useCallback(async (page = 1, limit = 50): Promise<CollectionResponse | null> => {
-    if (!session?.user) {
-      return null;
-    }
+  const fetchCollection = useCallback(async (
+    params: { page: number; limit?: number; q?: string; sort?: CollectionSort },
+    signal?: AbortSignal,
+  ): Promise<CollectionResponse | null> => {
+    const search = new URLSearchParams({
+      page: String(params.page),
+      limit: String(params.limit ?? 50),
+      sort: params.sort ?? 'set',
+    });
+    if (params.q) search.set('q', params.q);
 
-    setIsLoading(true);
     try {
-      const response = await fetch(`/api/collection?page=${page}&limit=${limit}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch collection');
-      }
-
-      return data;
-    } catch (error: any) {
-      showToast(error.message || 'Error fetching collection', 'error');
+      return await request(`/api/collection?${search}`, { signal });
+    } catch (error) {
+      if (signal?.aborted) return null;
+      showToast(error instanceof Error ? error.message : 'Erreur de chargement', 'error');
       return null;
-    } finally {
-      setIsLoading(false);
     }
-  }, [session, showToast]);
+  }, [showToast]);
 
   return {
     addToCollection,

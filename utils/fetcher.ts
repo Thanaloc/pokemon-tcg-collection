@@ -1,4 +1,4 @@
-export async function fetchJson<T = any>(url: string, retries = 3): Promise<T> {
+export async function fetchJson<T = unknown>(url: string, retries = 3): Promise<T> {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const res = await fetch(url);

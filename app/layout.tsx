@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import SessionProvider from "@/components/SessionProvider/SessionProvider";
-import { ToastProvider } from "../app/contexts/ToastContext";
+import Footer from "@/components/Footer";
+import { ToastProvider } from "@/app/contexts/ToastContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pokemon TCG Collection",
-  description: "A simple tool to visualize and compare pokemon cards !",
+  title: "Pokémon TCG Collection",
+  description: "Toutes les cartes Pokémon, Pokémon par Pokémon, avec leurs prix Cardmarket. Gérez votre collection et suivez l'évolution des prix.",
   icons: {
     icon: '/logo.ico',
   },
@@ -35,6 +36,7 @@ export default function RootLayout({
         <ToastProvider>
           <SessionProvider>
             {children}
+            <Footer />
           </SessionProvider>
         </ToastProvider>
       </body>

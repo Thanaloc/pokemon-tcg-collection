@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { updateQuantitySchema } from '@/lib/validation/collection';
 
 export async function PATCH(request: Request) {
   try {
@@ -10,47 +11,24 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { cardId, quantity } = body;
-
-    if (!cardId || quantity === undefined) {
-      return NextResponse.json(
-        { error: 'Card ID and quantity required' },
-        { status: 400 }
-      );
+    const parsed = updateQuantitySchema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
+    const { cardId, quantity } = parsed.data;
 
-    if (quantity < 1) {
-      return NextResponse.json(
-        { error: 'Quantity must be at least 1' },
-        { status: 400 }
-      );
-    }
-
-    const collection = await prisma.userCollection.findUnique({
-      where: {
-        userId_cardId: {
-          userId: session.user.id,
-          cardId: cardId,
-        },
-      },
-    });
-
-    if (!collection) {
-      return NextResponse.json({ error: 'Card not in collection' }, { status: 404 });
-    }
-
-    const updated = await prisma.userCollection.update({
-      where: { id: collection.id },
+    const { count } = await prisma.userCollection.updateMany({
+      where: { userId: session.user.id, cardId },
       data: { quantity },
     });
 
-    return NextResponse.json({
-      message: 'Quantity updated',
-      collection: updated,
-    });
-  } catch (error: any) {
+    if (count === 0) {
+      return NextResponse.json({ error: 'Carte absente de la collection' }, { status: 404 });
+    }
+
+    return NextResponse.json({ cardId, quantity });
+  } catch (error) {
     console.error('Error updating quantity:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Impossible de modifier la quantité' }, { status: 500 });
   }
 }

@@ -82,8 +82,8 @@ export default function CardItem({
 
       <img 
         src={card.smallImage} 
-        alt={card.name} 
-        className="w-full rounded-xl shadow-lg mb-3 border border-red-500/10 group-hover:shadow-red-500/30 transition-shadow" 
+        alt={`${card.name} — ${card.set} #${card.number}`}
+        className="w-full aspect-[245/342] object-contain rounded-xl shadow-lg mb-3 border border-red-500/10 group-hover:shadow-red-500/30 transition-shadow" 
         loading="lazy" 
       />
 
@@ -101,7 +101,7 @@ export default function CardItem({
 
       {hasPriceWarning && card.price && (
         <div className="mt-2 bg-orange-500/10 border border-orange-500/20 rounded-lg p-2 text-xs text-orange-200 relative z-10">
-          ⚠️ Possibly incorrect price (multiple versions)
+          ⚠️ Prix possiblement imprécis (plusieurs versions)
         </div>
       )}
 
@@ -119,26 +119,26 @@ export default function CardItem({
                        transform hover:scale-105
                        transition-all duration-200"
           >
-            📊 View on Cardmarket
+            📊 Voir sur Cardmarket
           </a>
         )}
         
                 <button 
           onClick={handleAddToCollection}
           disabled={!collectionEnabled || isLoading} 
-          title={!collectionEnabled ? "Coming soon" : !isAuthenticated ? "Login to add to collection" : ""} 
+          title={!isAuthenticated ? "Connectez-vous pour ajouter à la collection" : undefined}
           className={`w-full py-2.5 text-xs rounded-xl font-bold transition-all duration-200
                      ${collectionEnabled && !isLoading
                        ? 'bg-slate-700 hover:bg-slate-600 text-white shadow-lg hover:shadow-xl hover:scale-105' 
                        : 'bg-slate-800/50 text-slate-500 cursor-not-allowed opacity-50 border border-slate-700/50'}`}
         >
-          {isLoading ? '⏳ Adding...' : ownedQuantity > 0 ? '+ Add Another' : '⭐ Add to Collection'}
+          {isLoading ? '⏳ Ajout...' : ownedQuantity > 0 ? '+ Ajouter un exemplaire' : '⭐ Ajouter à la collection'}
         </button>
 
         <button
           onClick={handleTogglePin}
           disabled={isPinLoading}
-          title={!isAuthenticated ? "Login to pin" : isPinned ? "Retirer du dashboard" : "Suivre le prix sur le dashboard"}
+          title={!isAuthenticated ? "Connectez-vous pour suivre le prix" : isPinned ? "Retirer du dashboard" : "Suivre le prix sur le dashboard"}
           className={`w-full py-2.5 text-xs rounded-xl font-bold transition-all duration-200
                      flex items-center justify-center gap-2
                      ${isPinned

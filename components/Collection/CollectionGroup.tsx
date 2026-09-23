@@ -1,21 +1,5 @@
 import CollectionCard from './CollectionCard';
-
-interface CollectionItem {
-  id: number;
-  quantity: number;
-  card: {
-    id: string;
-    name: string;
-    number: string;
-    rarity: string;
-    smallImage: string;
-    set: string;
-    price: number | null;
-    pokemon: {
-      name: string;
-    };
-  };
-}
+import type { CollectionItem } from '@/types';
 
 interface Props {
   groupName: string;

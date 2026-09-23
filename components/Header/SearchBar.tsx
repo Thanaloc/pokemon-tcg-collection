@@ -17,15 +17,16 @@ export default function SearchBar({ value, onChange }: Props) {
           size={22} 
         />
         <input
-          type="text"
-          placeholder="Rechercher un Pokémon par nom ou numéro..."
+          type="search"
+          aria-label="Rechercher un Pokémon"
+          placeholder="Nom (FR ou EN) ou numéro..."
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full pl-12 pr-6 py-4 bg-slate-800/70 backdrop-blur-md border-2 border-red-500/30 rounded-2xl
+          className="w-full pl-12 pr-4 sm:pr-6 py-3 sm:py-4 bg-slate-800/70 backdrop-blur-md border-2 border-red-500/30 rounded-2xl
                      focus:ring-4 focus:ring-red-500/40 focus:border-red-400 
                      hover:border-red-400/50 
                      transition-all duration-300 
-                     text-white placeholder-white/40 text-lg
+                     text-white placeholder-white/40 text-base sm:text-lg
                      shadow-xl hover:shadow-2xl hover:shadow-red-500/20"
         />
       </div>

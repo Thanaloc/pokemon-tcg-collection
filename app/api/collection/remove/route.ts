@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { cardIdSchema } from '@/lib/validation/collection';
 
 export async function DELETE(request: Request) {
   try {
@@ -11,34 +12,22 @@ export async function DELETE(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const cardId = searchParams.get('cardId');
-
-    if (!cardId) {
-      return NextResponse.json({ error: 'Card ID required' }, { status: 400 });
+    const parsed = cardIdSchema.safeParse(searchParams.get('cardId'));
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Carte invalide' }, { status: 400 });
     }
 
-    const collection = await prisma.userCollection.findUnique({
-      where: {
-        userId_cardId: {
-          userId: session.user.id,
-          cardId: cardId,
-        },
-      },
+    const { count } = await prisma.userCollection.deleteMany({
+      where: { userId: session.user.id, cardId: parsed.data },
     });
 
-    if (!collection) {
-      return NextResponse.json({ error: 'Card not in collection' }, { status: 404 });
+    if (count === 0) {
+      return NextResponse.json({ error: 'Carte absente de la collection' }, { status: 404 });
     }
 
-    await prisma.userCollection.delete({
-      where: { id: collection.id },
-    });
-
-    return NextResponse.json({
-      message: 'Card removed from collection',
-    });
-  } catch (error: any) {
+    return NextResponse.json({ ok: true });
+  } catch (error) {
     console.error('Error removing card:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Impossible de retirer la carte' }, { status: 500 });
   }
 }

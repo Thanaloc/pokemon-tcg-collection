@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { addToCollectionSchema } from '@/lib/validation/collection';
 
 export async function POST(request: Request) {
   try {
@@ -10,56 +11,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { cardId } = body;
-
-    if (!cardId) {
-      return NextResponse.json({ error: 'Card ID required' }, { status: 400 });
+    const parsed = addToCollectionSchema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Carte invalide' }, { status: 400 });
     }
+    const { cardId } = parsed.data;
 
-    const card = await prisma.card.findUnique({
-      where: { id: cardId },
-    });
-
+    const card = await prisma.card.findUnique({ where: { id: cardId }, select: { id: true } });
     if (!card) {
-      return NextResponse.json({ error: 'Card not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Carte introuvable' }, { status: 404 });
     }
 
-    const existingCollection = await prisma.userCollection.findUnique({
-      where: {
-        userId_cardId: {
-          userId: session.user.id,
-          cardId: cardId,
-        },
-      },
+    // Atomic: two quick clicks give 2 copies instead of a unique-constraint error.
+    const collection = await prisma.userCollection.upsert({
+      where: { userId_cardId: { userId: session.user.id, cardId } },
+      create: { userId: session.user.id, cardId, quantity: 1 },
+      update: { quantity: { increment: 1 } },
     });
 
-    if (existingCollection) {
-      const updated = await prisma.userCollection.update({
-        where: { id: existingCollection.id },
-        data: { quantity: existingCollection.quantity + 1 },
-      });
-
-      return NextResponse.json({
-        message: 'Card quantity updated',
-        collection: updated,
-      });
-    }
-
-    const collection = await prisma.userCollection.create({
-      data: {
-        userId: session.user.id,
-        cardId: cardId,
-        quantity: 1,
-      },
-    });
-
-    return NextResponse.json({
-      message: 'Card added to collection',
-      collection,
-    }, { status: 201 });
-  } catch (error: any) {
+    return NextResponse.json({ collection }, { status: collection.quantity === 1 ? 201 : 200 });
+  } catch (error) {
     console.error('Error adding card to collection:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Impossible d'ajouter la carte" }, { status: 500 });
   }
 }

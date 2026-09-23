@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import type { Pokemon, Card, SortOption } from '@/types';
+import type { Pokemon, SortOption } from '@/types';
 import { usePokemonCards } from '@/hooks/usePokemonCards';
 import CardFilters from './CardFilters';
 import CardGrid from './CardGrid';
@@ -23,49 +23,61 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
     const [pinnedCardIds, setPinnedCardIds] = useState<Set<string>>(new Set());
     const [pinLoadingIds, setPinLoadingIds] = useState<Set<string>>(new Set());
 
+    // Filters start fresh for every Pokémon (state adjusted during render,
+    // which React prefers over resetting it in an effect).
+    const [shownPokemonId, setShownPokemonId] = useState(pokemon?.id);
+    if (pokemon?.id !== shownPokemonId) {
+        setShownPokemonId(pokemon?.id);
+        setCardSearchTerm('');
+        setFilterRarity('all');
+        setFilterSeries('all');
+        setSortBy('rarity');
+    }
+
     useEffect(() => {
-        if (pokemon) {
-            load(pokemon.name);
-            setCardSearchTerm('');
-            setFilterRarity('all');
-            setFilterSeries('all');
-            setSortBy('rarity');
-        }
+        if (pokemon) load(pokemon.id);
     }, [pokemon, load]);
 
-        useEffect(() => {
-        if (cards.length > 0) {
-            fetchOwnedCards();
-            fetchPinnedCards();
-        }
+    // Escape closes the modal; the page behind must not scroll while it is open.
+    useEffect(() => {
+        if (!pokemon) return;
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') onClose();
+        };
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', onKeyDown);
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            document.removeEventListener('keydown', onKeyDown);
+        };
+    }, [pokemon, onClose]);
+
+    // Which of these cards the user owns / follows (both endpoints answer
+    // harmlessly for anonymous visitors).
+    useEffect(() => {
+        if (cards.length === 0) return;
+        let cancelled = false;
+
+        fetch('/api/collection/check', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cardIds: cards.map(c => c.id) }),
+        })
+            .then(response => response.json())
+            .then(data => { if (!cancelled) setOwnedCards(data.owned || {}); })
+            .catch(error => console.error('Error fetching owned cards:', error));
+
+        fetch('/api/dashboard/pins')
+            .then(response => (response.ok ? response.json() : null))
+            .then(data => {
+                if (cancelled || !data) return;
+                setPinnedCardIds(new Set<string>((data.pins || []).map((p: { card: { id: string } }) => p.card.id)));
+            })
+            .catch(error => console.error('Error fetching pinned cards:', error));
+
+        return () => { cancelled = true; };
     }, [cards]);
-
-    const fetchOwnedCards = async () => {
-        try {
-            const cardIds = cards.map(c => c.id);
-            const response = await fetch('/api/collection/check', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cardIds }),
-            });
-            const data = await response.json();
-            setOwnedCards(data.owned || {});
-        } catch (error) {
-            console.error('Error fetching owned cards:', error);
-        }
-    };
-
-        const fetchPinnedCards = async () => {
-        try {
-            const response = await fetch('/api/dashboard/pins');
-            if (!response.ok) return;
-            const data = await response.json();
-            const ids = new Set<string>((data.pins || []).map((p: any) => p.card.id));
-            setPinnedCardIds(ids);
-        } catch (error) {
-            console.error('Error fetching pinned cards:', error);
-        }
-    };
 
     const togglePin = async (cardId: string) => {
         const wasPinned = pinnedCardIds.has(cardId);
@@ -209,14 +221,17 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm"
             onClick={onClose}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
         >
             <div
                 className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl w-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl border border-red-500/20 overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="relative px-6 py-12 border-b border-red-500/20 bg-gradient-to-r from-slate-900/95 via-red-900/60 to-slate-900/95 backdrop-blur-xl flex-shrink-0 rounded-t-3xl">
+                <div className="relative px-4 sm:px-6 py-6 sm:py-12 border-b border-red-500/20 bg-gradient-to-r from-slate-900/95 via-red-900/60 to-slate-900/95 backdrop-blur-xl flex-shrink-0 rounded-t-3xl">
 
                     <div className="absolute inset-0 opacity-[0.12]" style={{
                         backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 0l34.64 20v40L40 80 5.36 60V20z' fill='none' stroke='%23ef4444' stroke-width='1.5'/%3E%3C/svg%3E")`,
@@ -231,7 +246,7 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                         <div className="flex items-center justify-between gap-6">
 
                             <div className="flex items-center gap-4">
-                                <div className="w-20 h-20 flex-shrink-0 bg-slate-800/50 rounded-2xl p-2 border-2 border-red-500/40 shadow-xl">
+                                <div className="w-14 h-14 sm:w-20 sm:h-20 flex-shrink-0 bg-slate-800/50 rounded-2xl p-2 border-2 border-red-500/40 shadow-xl">
                                     <img
                                         src={pokemon.imageUrl}
                                         alt={pokemon.name}
@@ -242,7 +257,7 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                                 <div>
                                     <h2
                                         id="modal-title"
-                                        className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-red-500 to-orange-400 drop-shadow-lg"
+                                        className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-red-500 to-orange-400 drop-shadow-lg"
                                     >
                                         {pokemon.name}
                                     </h2>
@@ -271,7 +286,7 @@ export default function PokemonModal({ pokemon, onClose }: Props) {
                     </div>
                 </div>
 
-                <div className="p-6 overflow-y-auto flex-1 min-h-0 custom-scrollbar">
+                <div className="p-3 sm:p-6 overflow-y-auto flex-1 min-h-0 custom-scrollbar">
                     {!isLoading && cards.length > 0 ? (
                         <>
                             <CardFilters

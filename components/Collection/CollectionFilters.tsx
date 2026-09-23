@@ -1,10 +1,11 @@
 import Link from 'next/link';
+import type { CollectionSort } from '@/types';
 
 interface Props {
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  sortBy: 'set' | 'pokemon' | 'price' | 'quantity';
-  onSortChange: (value: 'set' | 'pokemon' | 'price' | 'quantity') => void;
+  sortBy: CollectionSort;
+  onSortChange: (value: CollectionSort) => void;
 }
 
 export default function CollectionFilters({ searchTerm, onSearchChange, sortBy, onSortChange }: Props) {
@@ -19,13 +20,14 @@ export default function CollectionFilters({ searchTerm, onSearchChange, sortBy, 
                  transform hover:scale-105
                  transition-all duration-200 flex items-center gap-2"
       >
-        ← Retour à l'accueil
+        ← Retour à l&apos;accueil
       </Link>
 
       <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
         <input
-          type="text"
-          placeholder="Rechercher..."
+          type="search"
+          placeholder="Pokémon, carte, set..."
+          aria-label="Rechercher dans la collection"
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
           className="px-4 py-2 bg-slate-800 border-2 border-red-500/30 rounded-xl
@@ -34,7 +36,8 @@ export default function CollectionFilters({ searchTerm, onSearchChange, sortBy, 
         
         <select
           value={sortBy}
-          onChange={(e) => onSortChange(e.target.value as any)}
+          onChange={(e) => onSortChange(e.target.value as CollectionSort)}
+          aria-label="Trier la collection"
           className="px-4 py-2 bg-slate-800 border-2 border-red-500/30 rounded-xl
                    text-white focus:outline-none focus:ring-2 focus:ring-red-500/50 cursor-pointer"
         >
@@ -42,6 +45,7 @@ export default function CollectionFilters({ searchTerm, onSearchChange, sortBy, 
           <option value="pokemon">Trier par Pokémon</option>
           <option value="price">Trier par Prix</option>
           <option value="quantity">Trier par Quantité</option>
+          <option value="recent">Ajouts récents</option>
         </select>
       </div>
     </div>

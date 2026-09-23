@@ -40,9 +40,16 @@ export default React.memo(function PokemonItem({ pokemon, onSelect }: Props) {
         <p className="text-xs text-red-300 font-mono inline-block px-3 py-1 rounded-full mb-2 border border-red-500/10">
           #{pokemon.number}
         </p>
-        <h3 className="font-semibold text-white text-base mb-2">
+        <h3 className="font-semibold text-white text-base mb-1">
           {pokemon.name}
         </h3>
+        {pokemon.cardCount !== undefined && (
+          <p className={`text-xs mb-2 ${pokemon.cardCount > 0 ? 'text-red-200/70' : 'text-slate-500'}`}>
+            {pokemon.cardCount > 0
+              ? `${pokemon.cardCount} carte${pokemon.cardCount > 1 ? 's' : ''}`
+              : 'Aucune carte'}
+          </p>
+        )}
         <div className="flex justify-center gap-2 flex-wrap">
           {pokemon.types.slice(0, 2).map((t, i) => (
             <span 

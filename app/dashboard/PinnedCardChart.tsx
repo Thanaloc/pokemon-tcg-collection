@@ -11,7 +11,6 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { X, AlertTriangle, ExternalLink } from 'lucide-react';
-import { buildCardmarketUrl } from '@/lib/cardmarket';
 
 type HistoryPoint = {
   snapshotAt: string;
@@ -38,13 +37,14 @@ interface Props {
 
 export default function PinnedCardChart({ pin, range, onUnpin }: Props) {
   const [history, setHistory] = useState<HistoryPoint[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Loading is derived: true until the response for the current range arrives.
+  const requestKey = `${pin.card.id}|${range}`;
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const isLoading = loadedKey !== requestKey;
 
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
-    setError(null);
 
     fetch(`/api/cards/${encodeURIComponent(pin.card.id)}/price-history?range=${range}`)
       .then(res => {
@@ -54,18 +54,19 @@ export default function PinnedCardChart({ pin, range, onUnpin }: Props) {
       .then(data => {
         if (cancelled) return;
         setHistory(data.history || []);
-        setIsLoading(false);
+        setError(null);
+        setLoadedKey(requestKey);
       })
       .catch(err => {
         if (cancelled) return;
         setError(err.message);
-        setIsLoading(false);
+        setLoadedKey(requestKey);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [pin.card.id, range]);
+  }, [pin.card.id, range, requestKey]);
 
   const hasLowConfidence = history.some(h => h.confidence === 'LOW');
 

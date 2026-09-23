@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 
@@ -36,7 +37,7 @@ export async function GET(
     }
 
     const days = RANGE_TO_DAYS[range];
-    const where: any = { cardId };
+    const where: Prisma.PriceHistoryWhereInput = { cardId };
     if (days !== null) {
       where.snapshotAt = {
         gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000),

@@ -4,23 +4,23 @@ import { fetchJson } from '@/utils/fetcher';
 import { requestDeduplicator } from '../utils/requestDuplicator';
 
 export function usePokemonCards() {
-  const cacheRef = useRef<Map<string, Card[]>>(new Map());
-  const latestRequestRef = useRef<string | null>(null);
+  const cacheRef = useRef<Map<number, Card[]>>(new Map());
+  const latestRequestRef = useRef<number | null>(null);
 
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (pokemonName: string) => {
-    latestRequestRef.current = pokemonName;
-    const isStillCurrent = () => latestRequestRef.current === pokemonName;
+  const load = useCallback(async (pokemonId: number) => {
+    latestRequestRef.current = pokemonId;
+    const isStillCurrent = () => latestRequestRef.current === pokemonId;
 
     setError(null);
     setIsLoading(true);
 
     try {
-      if (cacheRef.current.has(pokemonName)) {
-        const cached = cacheRef.current.get(pokemonName)!;
+      if (cacheRef.current.has(pokemonId)) {
+        const cached = cacheRef.current.get(pokemonId)!;
         if (isStillCurrent()) {
           setCards(cached);
         }
@@ -28,23 +28,23 @@ export function usePokemonCards() {
       }
 
       const data = await requestDeduplicator.dedupe(
-        `pokemon-cards-${pokemonName}`,
+        `pokemon-cards-${pokemonId}`,
         async () => {
-          const url = `/api/cards?pokemon=${encodeURIComponent(pokemonName)}`;
+          const url = `/api/cards?pokemonId=${pokemonId}`;
           return fetchJson(url);
         }
       );
 
       const normalized = Array.isArray(data) ? data : [];
-      cacheRef.current.set(pokemonName, normalized);
+      cacheRef.current.set(pokemonId, normalized);
 
       if (isStillCurrent()) {
         setCards(normalized);
       }
       return normalized;
-    } catch (err: any) {
+    } catch (err) {
       if (isStillCurrent()) {
-        setError(err.message || 'Erreur lors du chargement des cartes');
+        setError(err instanceof Error ? err.message : 'Erreur lors du chargement des cartes');
         setCards([]);
       }
       return [];

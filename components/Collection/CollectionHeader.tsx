@@ -5,14 +5,17 @@ import UserMenu from '@/components/Header/UserMenu';
 interface Props {
   userName: string;
   userEmail: string;
-  totalCards: number;
+  distinctCards: number;
+  totalCopies: number;
   totalValue: number;
 }
 
-export default function CollectionHeader({ userName, userEmail, totalCards, totalValue }: Props) {
+const euros = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+
+export default function CollectionHeader({ userName, userEmail, distinctCards, totalCopies, totalValue }: Props) {
   return (
-    <header className="sticky top-0 z-40 px-6 py-8 border-b border-red-500/20 bg-gradient-to-r from-slate-900/95 via-red-900/40 to-slate-900/95 backdrop-blur-xl shadow-2xl">
-      
+    <header className="sticky top-0 z-40 px-4 sm:px-6 py-4 sm:py-8 border-b border-red-500/20 bg-gradient-to-r from-slate-900/95 via-red-900/40 to-slate-900/95 backdrop-blur-xl shadow-2xl">
+
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 opacity-[0.12]" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 0l34.64 20v40L40 80 5.36 60V20z' fill='none' stroke='%23ef4444' stroke-width='1.5'/%3E%3C/svg%3E")`,
@@ -25,37 +28,39 @@ export default function CollectionHeader({ userName, userEmail, totalCards, tota
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="flex items-center justify-between gap-6 mb-6">
-          <div className="flex items-center gap-4">
-            
-            <Link href="/" className="relative w-14 h-14 flex-shrink-0">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+
+            <Link href="/" aria-label="Accueil" className="relative w-10 h-10 sm:w-14 sm:h-14 flex-shrink-0">
               <div className="absolute inset-0 animate-spin rounded-full bg-gradient-to-r from-red-500 via-white to-red-500 opacity-80"></div>
               <div className="absolute inset-1 rounded-full bg-slate-900 flex items-center justify-center">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-red-500 to-red-700 shadow-lg"></div>
+                <div className="w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-red-500 to-red-700 shadow-lg"></div>
               </div>
               <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-900 transform -translate-y-1/2"></div>
-              <div className="absolute top-1/2 left-1/2 w-4 h-4 rounded-full border-2 border-slate-900 bg-white transform -translate-x-1/2 -translate-y-1/2"></div>
+              <div className="absolute top-1/2 left-1/2 w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-slate-900 bg-white transform -translate-x-1/2 -translate-y-1/2"></div>
             </Link>
 
-            <div>
-              <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-red-500 to-orange-400 drop-shadow-lg">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-red-500 to-orange-400 drop-shadow-lg">
                 Ma Collection
               </h1>
-              <p className="text-sm text-red-200/80 mt-1 font-medium">
-                <strong className="text-white">{totalCards}</strong> cartes • <strong className="text-white">{totalValue.toFixed(2)}€</strong>
+              <p className="text-xs sm:text-sm text-red-200/80 mt-1 font-medium truncate">
+                <strong className="text-white">{distinctCards}</strong> carte{distinctCards > 1 ? 's' : ''}
+                {' • '}<strong className="text-white">{totalCopies}</strong> exemplaire{totalCopies > 1 ? 's' : ''}
+                {' • '}<strong className="text-white">{euros.format(totalValue)}</strong>
               </p>
             </div>
           </div>
 
-                    <div className="flex items-center gap-4">
-            <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+            <div className="hidden lg:flex gap-4 items-center">
               <div className="bg-gradient-to-br from-red-500/10 to-orange-500/10 px-6 py-3 rounded-2xl border border-red-400/20">
-                <p className="text-xs text-red-300 font-medium uppercase tracking-wide">Cartes</p>
-                <p className="text-2xl font-extrabold text-white">{totalCards}</p>
+                <p className="text-xs text-red-300 font-medium uppercase tracking-wide">Exemplaires</p>
+                <p className="text-2xl font-extrabold text-white">{totalCopies}</p>
               </div>
               <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 px-6 py-3 rounded-2xl border border-orange-400/20">
-                <p className="text-xs text-orange-300 font-medium uppercase tracking-wide">Valeur</p>
-                <p className="text-2xl font-extrabold text-white">{totalValue.toFixed(2)}€</p>
+                <p className="text-xs text-orange-300 font-medium uppercase tracking-wide">Valeur estimée</p>
+                <p className="text-2xl font-extrabold text-white">{euros.format(totalValue)}</p>
               </div>
             </div>
 
@@ -68,7 +73,7 @@ export default function CollectionHeader({ userName, userEmail, totalCards, tota
                        shadow-lg hover:shadow-xl hover:shadow-amber-500/40
                        transition-all duration-200
                        transform hover:scale-105
-                       flex items-center gap-3"
+                       hidden lg:flex items-center gap-3"
             >
               <TrendingUp className="w-5 h-5 text-amber-400 group-hover:text-amber-300 transition-colors" />
               <span>Dashboard</span>

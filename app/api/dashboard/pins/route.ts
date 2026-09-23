@@ -24,7 +24,7 @@ export async function GET() {
       orderBy: { pinnedAt: 'desc' },
     });
 
-        const formatted = pins.map((p: any) => ({
+    const formatted = pins.map(p => ({
     id: p.id,
     pinnedAt: p.pinnedAt,
     card: {
@@ -32,8 +32,8 @@ export async function GET() {
       name: p.card.name,
       number: p.card.number,
       set: p.card.set.name,
-      smallImage: p.card.imageSmallFr || p.card.imageSmallEn,
-      currentPrice: p.card.price?.cardmarketPrice || null,
+      smallImage: p.card.imageSmallFr || p.card.imageSmallEn || '/placeholder-card.png',
+      currentPrice: p.card.price?.cardmarketPrice ?? null,
       cardmarketUrl: buildCardmarketUrl({
         name: p.card.name,
         number: p.card.number,
