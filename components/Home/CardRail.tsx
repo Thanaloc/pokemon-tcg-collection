@@ -22,18 +22,25 @@ interface Props {
 
 const euros = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
-/** Horizontal strip of cards; clicking one opens its Pokémon. */
+/** Strip of cards; clicking one opens its Pokémon. */
 export default function CardRail({ cards, onSelect }: Props) {
   if (cards.length === 0) return null;
 
   return (
-    <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2 pt-1 snap-x">
+    // Touch screens: a swipeable strip. From `sm` up (mouse users can't scroll
+    // sideways with a wheel): a single grid row showing only the cards that fit
+    // entirely; the others go to zero-height rows hidden by overflow.
+    <div
+      className="no-scrollbar flex gap-4 overflow-x-auto pb-2 pt-1 snap-x
+                 sm:grid sm:grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] sm:grid-rows-1 sm:auto-rows-[0]
+                 sm:gap-x-4 sm:gap-y-0 sm:overflow-hidden sm:pb-0"
+    >
         {cards.map(card => (
           <button
             key={card.id}
             type="button"
             onClick={() => onSelect(card.pokemonId)}
-            className="w-28 sm:w-32 shrink-0 snap-start text-left rounded-lg transition active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+            className="w-28 sm:w-auto shrink-0 snap-start text-left rounded-lg transition active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
             aria-label={`${card.name}, ${card.set}`}
           >
             <HoloCard foil={isFoilRarity(card.rarity) && hasCardImage(card.smallImage)}>
